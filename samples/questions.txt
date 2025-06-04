@@ -1,17 +1,17 @@
-1.  What is Project Nova and who is developing it?
-2.  Tell me about Dr. Aris Thorne. What is his role and previous company?
-3.  What technologies are used in Project Nova?
-4.  Who are the key people involved in Project Nova, and what are their roles?
-5.  What is Alpha Corp's financial performance in Q3 2024?
-6.  Which companies has Alpha Corp partnered with, and for what purposes?
-7.  What is Project Chimera?
-8.  Where is Alpha Corp headquartered, and where are its research teams located?
-9.  Are there any concerns about Project Nova?
-10. What is the Helios Optimizer?
-11. How is Alpha Corp planning to use open source?
-12. Who is Dr. Evelyn Reed and what is her focus?
-13. Which cloud platforms are mentioned in relation to Alpha Corp?
-14. Who is Alpha Corp's main competitor?
-15. What is the agreement value with Gamma Materials?
-16. What skills is Alpha Corp looking for?
-17. Where will the first pilot for Project Nova solutions with Delta Energy Services be launched?
+What is Project Nova and who is developing it?
+Tell me about Dr. Aris Thorne. What is his role and previous company?
+What technologies are used in Project Nova?
+Who are the key people involved in Project Nova, and what are their roles?
+What is Alpha Corp's financial performance in Q3 2024?
+Which companies has Alpha Corp partnered with, and for what purposes?
+What is Project Chimera?
+Where is Alpha Corp headquartered, and where are its research teams located?
+Are there any concerns about Project Nova?
+What is the Helios Optimizer?
+How is Alpha Corp planning to use open source?
+Who is Dr. Evelyn Reed and what is her focus?
+Which cloud platforms are mentioned in relation to Alpha Corp?
+Who is Alpha Corp's main competitor?
+What is the agreement value with Gamma Materials?
+What skills is Alpha Corp looking for?
+Where will the first pilot for Project Nova solutions with Delta Energy Services be launched?

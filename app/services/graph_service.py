@@ -88,12 +88,12 @@ async def get_full_graph_sample(
         rel_proxy = record.get('r')
 
         if source_node_proxy:
-            s_node = neo4j_conn._convert_neo4j_node_to_pydantic({"n": source_node_proxy}, 'n')
+            s_node = neo4j_conn._convert_neo4j_node_to_pydantic({"n": source_node_proxy})
             if s_node and s_node.id not in pydantic_nodes_map:
                 pydantic_nodes_map[s_node.id] = s_node
 
         if target_node_proxy:
-            t_node = neo4j_conn._convert_neo4j_node_to_pydantic({"n": target_node_proxy}, 'n')
+            t_node = neo4j_conn._convert_neo4j_node_to_pydantic({"n": target_node_proxy})
             if t_node and t_node.id not in pydantic_nodes_map:
                 pydantic_nodes_map[t_node.id] = t_node
 

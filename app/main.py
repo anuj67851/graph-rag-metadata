@@ -103,9 +103,9 @@ async def shutdown_event():
 
 common_api_prefix = settings.API_V1_STR if hasattr(settings, 'API_V1_STR') and settings.API_V1_STR else "/api/v1"
 
-app.include_router(router_ingestion.router, prefix=f"{common_api_prefix}{router_ingestion.router.prefix}")
-app.include_router(router_query.router, prefix=f"{common_api_prefix}{router_query.router.prefix}")
-app.include_router(router_graph.router, prefix=f"{common_api_prefix}{router_graph.router.prefix}")
+app.include_router(router_ingestion.router, prefix=common_api_prefix)
+app.include_router(router_query.router, prefix=common_api_prefix)
+app.include_router(router_graph.router, prefix=common_api_prefix)
 
 # --- Root Endpoint (Optional) ---
 @app.get("/", tags=["Root"])
