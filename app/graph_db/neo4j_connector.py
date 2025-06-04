@@ -123,34 +123,37 @@ class Neo4jConnector:
 
     def _convert_neo4j_relationship_to_pydantic(self, rel_input: Any, record_context: Dict[str, Any]) -> Optional[PydanticEdge]:
         try:
+            # Handle tuple input
+            if isinstance(rel_input, tuple):
+                rel_input = rel_input[0]  # Extract relationship from tuple
+
             rel_type_val = ""
             rel_props = {}
-            if isinstance(rel_input, Neo4jRelationshipObject): # Direct Neo4j Relationship object
+            if isinstance(rel_input, Neo4jRelationshipObject):
                 rel_obj = rel_input
                 rel_type_val = rel_obj.type
                 rel_props = dict(rel_obj)
-            elif isinstance(rel_input, dict): # Dictionary representation
+            elif isinstance(rel_input, dict):
                 rel_props = rel_input
-                rel_type_val = rel_props.get("type", "RELATED_TO") # Default if type missing in dict
+                rel_type_val = rel_props.get("type", "RELATED_TO")
             else:
                 logger.warning(f"Cannot convert to PydanticEdge, unexpected input type: {type(rel_input)}. Value: {str(rel_input)[:200]}")
                 return None
 
-            source_id = record_context.get("s_canonical_name")
-            target_id = record_context.get("t_canonical_name")
-
-            # Fallbacks if s_canonical_name/t_canonical_name not in record_context (should be from query)
-            # These fallbacks are less ideal as they rely on start_node/end_node being full node objects
-            if source_id is None and isinstance(rel_input, Neo4jRelationshipObject) and rel_input.start_node:
-                source_id = rel_input.start_node.get("canonical_name", str(rel_input.start_node.element_id))
-            if target_id is None and isinstance(rel_input, Neo4jRelationshipObject) and rel_input.end_node:
-                target_id = rel_input.end_node.get("canonical_name", str(rel_input.end_node.element_id))
+            # Use element IDs from record context
+            source_id = record_context.get("s_element_id")
+            target_id = record_context.get("t_element_id")
 
             if source_id is None or target_id is None:
                 logger.warning(f"Could not determine source/target ID for relationship. RecordCtx: {record_context}, RelInput: {str(rel_input)[:200]}")
                 return None
 
-            return PydanticEdge(source=str(source_id), target=str(target_id), label=rel_type_val, properties=rel_props)
+            return PydanticEdge(
+                source=str(source_id),
+                target=str(target_id),
+                label=rel_type_val,
+                properties=rel_props
+            )
         except Exception as e:
             logger.error(f"Error converting Neo4j val to PydanticEdge: {e}. Input: {str(rel_input)[:200]}", exc_info=True)
             return None
@@ -159,27 +162,30 @@ class Neo4jConnector:
         if not canonical_names: return Subgraph()
         logger.info(f"Getting subgraph for entities {canonical_names} (hop: {hop_depth}) using V7 standard Cypher.")
 
-        # Query V7: Each part of UNION ALL is a direct MATCH, UNWIND, and RETURN DISTINCT.
-        # No intermediate WITH clauses that might confuse the UNION structure.
+        # Revised query to capture all nodes and relationships
         query = (
             # Part 1: Get all distinct nodes from the N-hop paths
-                f"MATCH path = (center)-[*0..{hop_depth}]-(neighbor) "
-                f"WHERE center.canonical_name IN $names "
-                f"UNWIND nodes(path) AS n_item "
-                f"RETURN DISTINCT n_item AS item, 'node' AS item_type, "
-                f"       null AS s_canonical_name, null AS t_canonical_name, null AS rel_element_id "
-
-                f"UNION ALL "
-
-                # Part 2: Get all distinct relationships from the N-hop paths
-                f"MATCH path = (center)-[*0..{hop_depth}]-(neighbor) "
-                f"WHERE center.canonical_name IN $names "
-                f"UNWIND relationships(path) AS r_item "
-                f"RETURN DISTINCT r_item AS item, 'relationship' AS item_type, "
-                f"       startNode(r_item).canonical_name AS s_canonical_name, "
-                f"       endNode(r_item).canonical_name AS t_canonical_name, "
-                f"       elementId(r_item) AS rel_element_id"
-                )
+            f"MATCH path = (center)-[*0..{hop_depth}]-(neighbor) "
+            f"WHERE center.canonical_name IN $names "
+            f"WITH COLLECT(DISTINCT nodes(path)) AS allNodes "
+            f"UNWIND allNodes AS nodeList "
+            f"UNWIND nodeList AS n_item "
+            f"RETURN DISTINCT n_item AS item, 'node' AS item_type, "
+            f"       null AS s_element_id, null AS t_element_id, null AS rel_element_id "
+    
+            f"UNION ALL "
+    
+            # Part 2: Get all distinct relationships from the N-hop paths
+            f"MATCH path = (center)-[*0..{hop_depth}]-(neighbor) "
+            f"WHERE center.canonical_name IN $names "
+            f"WITH COLLECT(DISTINCT relationships(path)) AS allRels "
+            f"UNWIND allRels AS relList "
+            f"UNWIND relList AS r_item "
+            f"RETURN DISTINCT r_item AS item, 'relationship' AS item_type, "
+            f"       elementId(startNode(r_item)) AS s_element_id, "
+            f"       elementId(endNode(r_item)) AS t_element_id, "
+            f"       elementId(r_item) AS rel_element_id"
+        )
 
         params = {"names": canonical_names}
         results = await self.execute_query(query, params)
@@ -191,87 +197,114 @@ class Neo4jConnector:
 
         default_node_label = settings.SCHEMA.ENTITY_TYPES[0] if settings.SCHEMA.ENTITY_TYPES and settings.SCHEMA.ENTITY_TYPES[0] else 'Node'
 
+        # Revised query to capture all nodes and relationships
         query_sp = (
             # Part 1: Nodes from all shortest paths
             f"MATCH path = allShortestPaths((startNode:{default_node_label} {{canonical_name: $start_name}})-[*1..{max_hops}]-(endNode:{default_node_label} {{canonical_name: $end_name}})) "
-            f"UNWIND nodes(path) AS node_item "
+            f"WITH COLLECT(DISTINCT nodes(path)) AS allNodes "
+            f"UNWIND allNodes AS nodeList "
+            f"UNWIND nodeList AS node_item "
             f"RETURN DISTINCT node_item AS item, 'node' AS item_type, "
-            f"       null AS s_canonical_name, null AS t_canonical_name, null AS rel_element_id "
-
+            f"       null AS s_element_id, null AS t_element_id, null AS rel_element_id "
+    
             f"UNION ALL "
-
+    
             # Part 2: Relationships from all shortest paths
             f"MATCH path = allShortestPaths((startNode:{default_node_label} {{canonical_name: $start_name}})-[*1..{max_hops}]-(endNode:{default_node_label} {{canonical_name: $end_name}})) "
-            f"UNWIND relationships(path) AS rel_item "
+            f"WITH COLLECT(DISTINCT relationships(path)) AS allRels "
+            f"UNWIND allRels AS relList "
+            f"UNWIND relList AS rel_item "
             f"RETURN DISTINCT rel_item AS item, 'relationship' AS item_type, "
-            f"       startNode(rel_item).canonical_name AS s_canonical_name, "
-            f"       endNode(rel_item).canonical_name AS t_canonical_name, "
+            f"       elementId(startNode(rel_item)) AS s_element_id, "
+            f"       elementId(endNode(rel_item)) AS t_element_id, "
             f"       elementId(rel_item) AS rel_element_id"
         )
 
         params = {"start_name": start_node_name, "end_name": end_node_name}
         results = await self.execute_query(query_sp, params)
-
-        if not results:
-            logger.warning(f"No path found between {start_node_name} and {end_node_name}")
-            return Subgraph()
-
         return self._process_subgraph_results_revised_v3(results)
 
     def _process_subgraph_results_revised_v3(self, results: List[Dict[str, Any]]) -> Subgraph:
         pydantic_nodes_map: Dict[str, PydanticNode] = {}
+        pydantic_nodes_by_element_id: Dict[str, PydanticNode] = {}  # New: track nodes by element_id
         temp_edges: List[PydanticEdge] = []
         processed_rel_element_ids = set()
 
         logger.debug(f"Processing {len(results)} records with V3 subgraph processor.")
 
-        for i, record in enumerate(results):
-            item = record.get('item')
-            item_type = record.get('item_type')
+        # First pass: process all nodes
+        for record in results:
+            if record.get('item_type') != 'node' or not record.get('item'):
+                continue
 
-            if item_type == 'node' and item:
-                pydantic_node = self._convert_neo4j_node_to_pydantic(item)
-                if pydantic_node and pydantic_node.id not in pydantic_nodes_map:
-                    pydantic_nodes_map[pydantic_node.id] = pydantic_node
-            elif item_type == 'relationship' and item:
-                current_rel_unique_id = record.get('rel_element_id') # Get element_id directly from record
+            node = record['item']
+            pydantic_node = self._convert_neo4j_node_to_pydantic(node)
+            if not pydantic_node:
+                continue
 
-                if current_rel_unique_id is None: # Fallback if element_id is not returned (should be)
-                    if isinstance(item, Neo4jRelationshipObject):
-                        current_rel_unique_id = item.element_id
-                    elif isinstance(item, dict) and 'element_id' in item:
-                        current_rel_unique_id = item['element_id']
-                    else:
-                        logger.warning(f"Relationship missing element_id in record, falling back to hash. Item: {str(item)[:100]}")
-                        try: current_rel_unique_id = hash(json.dumps(item, sort_keys=True, default=str))
-                        except TypeError: logger.warning(f"Could not hash rel item: {str(item)[:100]}"); continue
+            # Get element_id from Neo4j node object
+            element_id = None
+            if isinstance(node, Neo4jNodeObject):
+                element_id = node.element_id
+            elif isinstance(node, dict) and 'element_id' in node:
+                element_id = node['element_id']
 
-                if current_rel_unique_id in processed_rel_element_ids:
+            if element_id:
+                pydantic_nodes_by_element_id[element_id] = pydantic_node
+
+            if pydantic_node.id not in pydantic_nodes_map:
+                pydantic_nodes_map[pydantic_node.id] = pydantic_node
+
+        # Second pass: process relationships
+        for record in results:
+            if record.get('item_type') != 'relationship' or not record.get('item'):
+                continue
+
+            item = record['item']
+            current_rel_unique_id = record.get('rel_element_id')
+
+            # Handle tuple input
+            if isinstance(item, tuple):
+                item = item[0]  # Extract relationship from tuple
+
+            if not current_rel_unique_id:
+                if isinstance(item, Neo4jRelationshipObject):
+                    current_rel_unique_id = item.element_id
+                elif isinstance(item, dict) and 'element_id' in item:
+                    current_rel_unique_id = item['element_id']
+                else:
+                    logger.warning(f"Relationship missing element_id, skipping")
                     continue
 
-                pydantic_edge = self._convert_neo4j_relationship_to_pydantic(item, record) # Pass full record for s/t names
-                if pydantic_edge:
-                    temp_edges.append(pydantic_edge)
-                    processed_rel_element_ids.add(current_rel_unique_id)
+            if current_rel_unique_id in processed_rel_element_ids:
+                continue
 
-        # Ensure all nodes from edges are present in the nodes list (robustness check)
-        all_node_ids_from_edges = set()
-        for edge in temp_edges:
-            all_node_ids_from_edges.add(edge.source)
-            all_node_ids_from_edges.add(edge.target)
+            # Get source and target element IDs from record
+            source_element_id = record.get('s_element_id')
+            target_element_id = record.get('t_element_id')
 
-        for node_id in all_node_ids_from_edges:
-            if node_id not in pydantic_nodes_map:
-                # This case implies a relationship's start/end node was not captured by the node part of the query.
-                # This *shouldn't* happen with the current query logic but if it does, we'd need to fetch the node.
-                # For now, log a warning. In a production system, you might fetch missing nodes.
-                logger.warning(f"Node '{node_id}' from an edge was not found in the initial node collection. Subgraph might be incomplete.")
-                # To fix, you could add a step here to query for these missing nodes:
-                # missing_nodes_data = await self.execute_query("MATCH (n) WHERE n.canonical_name = $id RETURN n", {"id": node_id})
-                # if missing_nodes_data and missing_nodes_data[0].get('n'):
-                #     p_node = self._convert_neo4j_node_to_pydantic(missing_nodes_data[0]['n'])
-                #     if p_node: pydantic_nodes_map[p_node.id] = p_node
+            # Convert to PydanticEdge
+            pydantic_edge = self._convert_neo4j_relationship_to_pydantic(item, {
+                "s_element_id": source_element_id,
+                "t_element_id": target_element_id
+            })
 
+            if not pydantic_edge:
+                continue
+
+            # Ensure nodes exist in our map
+            if source_element_id and source_element_id in pydantic_nodes_by_element_id:
+                source_node = pydantic_nodes_by_element_id[source_element_id]
+                if source_node.id not in pydantic_nodes_map:
+                    pydantic_nodes_map[source_node.id] = source_node
+
+            if target_element_id and target_element_id in pydantic_nodes_by_element_id:
+                target_node = pydantic_nodes_by_element_id[target_element_id]
+                if target_node.id not in pydantic_nodes_map:
+                    pydantic_nodes_map[target_node.id] = target_node
+
+            temp_edges.append(pydantic_edge)
+            processed_rel_element_ids.add(current_rel_unique_id)
 
         logger.debug(f"Processed subgraph (V3): {len(pydantic_nodes_map)} nodes, {len(temp_edges)} edges.")
         return Subgraph(nodes=list(pydantic_nodes_map.values()), edges=temp_edges)

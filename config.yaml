@@ -14,5 +14,5 @@ prompts_file_path: "prompts.yaml"
 faiss_index_path: "data/vector_store/graph_entities.index"
 vector_match_threshold: 0.75
 entity_info_hop_depth: 1
-relationship_discovery_max_path_length: 3
+relationship_discovery_max_path_length: 5
 complex_query_hop_depth: 2
