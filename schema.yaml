@@ -1,0 +1,66 @@
+entity_types:
+  # Core Types
+  - PERSON
+  - ORGANIZATION  # Companies, institutions, government bodies
+  - LOCATION      # Cities, countries, specific addresses
+
+  # Project & Product Related
+  - PROJECT_NAME  # Specific project names like "Project Titan"
+  - PRODUCT       # Commercial products, software, hardware
+  - SERVICE       # Offered services
+  - TECHNOLOGY    # Programming languages, frameworks, platforms, algorithms
+  - FEATURE       # Specific feature of a product or project
+
+  # Financial & Business
+  - FINANCIAL_METRIC # Revenue, profit, investment amount, market_cap
+  - CURRENCY_VALUE   # e.g., "$10 million USD" (might be a property or a node)
+  - EVENT         # Conferences, product launches, funding rounds, acquisitions
+  - AGREEMENT     # Partnerships, contracts, MoUs
+  - ROLE          # Job titles like "CEO", "Software Engineer"
+
+  # Document & Conceptual
+  - DOCUMENT_REF  # References to other documents, reports, papers
+  - CONCEPT       # Abstract ideas or methodologies mentioned, e.g., "Agile Development", "Machine Learning"
+  - SKILL         # Specific skills possessed by individuals or required by roles
+
+relationship_types:
+  # Person-Organization
+  - WORKS_FOR
+  - FOUNDED_BY
+  - INVESTED_IN_ORG   # Person invests in Org
+  - ADVISES         # Person advises Org
+  - IS_A_MEMBER_OF  # e.g. board member
+
+  # Organization-Organization
+  - PARTNERS_WITH
+  - ACQUIRED        # Org1 acquired Org2
+  - SUBSIDIARY_OF
+  - COMPETES_WITH
+  - SUPPLIES_TO
+  - CUSTOMER_OF
+
+  # Project/Product related
+  - DEVELOPED_BY    # Project/Product developed by Organization/Person
+  - USES_TECHNOLOGY # Project/Product uses Technology
+  - HAS_FEATURE     # Product has Feature
+  - TARGETS_MARKET  # Product targets Location/Organization_Type
+  - IS_PART_OF      # Feature is part of Product/Project
+
+  # Financial & Event related
+  - REPORTS_METRIC  # Organization reports Financial_Metric
+  - HAS_VALUE       # Financial_Metric has Currency_Value (or Currency_Value IS_VALUE_OF Financial_Metric)
+  - ANNOUNCED_AT    # Product/Feature announced at Event
+  - OCCURRED_IN     # Event occurred in Location
+  - PARTICIPATED_IN # Person/Organization participated in Event
+
+  # General / Conceptual
+  - LOCATED_IN      # Organization/Event located in Location
+  - MENTIONS        # Document_Ref mentions Entity
+  - RELATED_TO      # Generic relationship if no other type fits
+  - HAS_ROLE        # Person has Role (at an Organization, perhaps via context of WORKS_FOR)
+  - REQUIRES_SKILL  # Role/Project requires Skill
+  - POSSESSES_SKILL # Person possesses Skill
+
+# Control dynamic discovery (can be overridden by LLM if context is strong)
+allow_dynamic_entity_types: true
+allow_dynamic_relationship_types: true

@@ -1,0 +1,18 @@
+app_name: "My Graph RAG App"
+api_v1_str: "/api/v1"
+
+llm_ingestion_model_name: "gpt-4o-mini"
+llm_query_ner_model_name: "gpt-4o-mini"
+llm_query_intent_model_name: "gpt-4o-mini"
+llm_query_response_model_name: "gpt-4o"
+llm_embedding_model_name: "text-embedding-3-small"
+embedding_dimension: 1536 # Optional: can be derived or set explicitly
+
+schema_file_path: "schema.yaml"
+prompts_file_path: "prompts.yaml"
+
+faiss_index_path: "data/vector_store/graph_entities.index"
+vector_match_threshold: 0.75
+entity_info_hop_depth: 1
+relationship_discovery_max_path_length: 3
+complex_query_hop_depth: 2

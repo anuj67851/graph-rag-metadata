@@ -1,0 +1,93 @@
+system_messages:
+  json_expert: >
+    You are an expert in information extraction.
+    Your goal is to extract structured information from text and output it ONLY in valid JSON format
+    as specified in the user prompt. Do not include any explanatory text before or after the JSON object.
+    Ensure all string values in the JSON are properly escaped.
+
+  query_understanding_expert: >
+    You are an expert in query analysis.
+    Your goal is to understand the user's intent and identify key entities from their query,
+    outputting ONLY a valid JSON object as specified. Do not include any explanatory text.
+
+  graph_rag_assistant: >
+    You are a specialized AI assistant for a Knowledge Graph RAG system.
+    Answer the user's query based SOLELY on the provided context from the knowledge graph.
+    The context will list entities and their relationships.
+    If the provided context does not contain enough information to answer the query,
+    clearly state that the information is not available in the provided context.
+    Do not make up information or use external knowledge.
+    Be concise and directly answer the query. Cite the source document if available in the context.
+
+user_prompts:
+  extract_entities_relationships: |
+    From the following text_chunk, extract entities and their relationships.
+    {schema_hint}
+
+    For each identified entity, provide:
+    - "original_mention": The exact text span mentioning the entity.
+    - "entity_type": The type of the entity (e.g., PERSON, ORGANIZATION, PROJECT_NAME, TECHNOLOGY, FINANCIAL_METRIC).
+    - "canonical_name": A standardized, common name for the entity. If multiple mentions refer to the same entity (e.g., "International Business Machines", "IBM Corp.", "IBM"), choose the most common or official short name like "IBM".
+    - "contexts": A list of 1-2 brief sentences from the text_chunk that best describe or define this entity.
+
+    For each identified relationship, provide:
+    - "source_canonical_name": The canonical_name of the source entity.
+    - "relationship_type": The type of relationship (e.g., WORKS_FOR, DEVELOPED_BY, USES_TECHNOLOGY, REPORTS_METRIC, PARTNERS_WITH).
+    - "target_canonical_name": The canonical_name of the target_entity.
+    - "contexts": A list of 1-2 brief sentences from the text_chunk that establish this relationship.
+
+    Return a single JSON object with two top-level keys: "entities" and "relationships".
+    Each key should have a list of the extracted items.
+
+    Example of canonical_name: "Dr. Jane Doe", "Jane Doe", "J. Doe" -> "Jane Doe". "Acme Corp.", "Acme Corporation" -> "Acme Corporation".
+
+    Text Chunk:
+    ---
+    {text_chunk}
+    ---
+    JSON Output:
+
+  extract_entities_from_query: |
+    Extract the key named entities (like people, organizations, product names, specific concepts)
+    from the following user query. Focus on nouns and noun phrases that likely correspond to
+    entities in a knowledge graph.
+    Output as a JSON object with a single key "entities", which is a list of strings.
+    If no specific entities are found, return an empty list.
+
+    User Query: "{user_query}"
+    JSON Output:
+
+  classify_query_intent: |
+    Given the user query and a list of entities that might be relevant from our knowledge graph:
+    User Query: "{user_query}"
+    Potentially Relevant Graph Entities: {linked_entities}
+
+    Determine the primary intent. Choose one type:
+    1. "entity_information": User wants attributes or direct connections of one or more specific entities.
+    2. "relationship_discovery": User wants to find paths or specific types of relationships between two or more entities.
+    3. "summarization_of_entity": User wants a general summary about a specific entity based on its connections.
+    4. "comparative_analysis": User wants to compare two or more entities. (More complex, might simplify for now)
+    5. "general_knowledge": User is asking a general question that might not directly map to specific entities or relationships (less ideal for GraphRAG).
+
+    Based on the intent, identify the primary target entities from the "Potentially Relevant Graph Entities" list or from the query itself if not in the list.
+
+    Output in JSON format:
+    {{
+      "query_intent": "chosen_intent_type",
+      "target_entities": ["EntityName1", "EntityName2"],
+      "intent_description": "A brief explanation of the derived intent."
+    }}
+    If intent is "general_knowledge" or unclear, "target_entities" can be an empty list.
+
+  generate_response_from_subgraph: |
+    User Query: "{user_query}"
+
+    Knowledge Graph Context:
+    ---
+    {subgraph_text}
+    ---
+    (The subgraph_text describes nodes and relationships. Nodes have properties like 'name', 'type', 'aliases', 'contexts', 'source_document'. Relationships connect nodes and have a 'type' and 'contexts'.)
+
+    Based ONLY on the provided "Knowledge Graph Context", answer the "User Query".
+    If the context includes 'source_document' information for relevant nodes or relationships, mention it if appropriate.
+    If the context is insufficient to answer, clearly state that. Do not use any external knowledge.
