@@ -168,12 +168,12 @@ async def process_document_for_ingestion(filename: str, file_content: Union[byte
             continue
 
         success = await neo4j_conn.merge_relationship(
-            source_entity_type=source_entity_type,
-            source_canonical_name=rel_data_dict["source_canonical_name"],
-            target_entity_type=target_entity_type,
-            target_canonical_name=rel_data_dict["target_canonical_name"],
-            relationship_type=rel_data_dict["relationship_type"],
-            properties=neo4j_rel_properties
+            s_type=source_entity_type,
+            s_name=rel_data_dict["source_canonical_name"],
+            t_type=target_entity_type,
+            t_name=rel_data_dict["target_canonical_name"],
+            r_type=rel_data_dict["relationship_type"],
+            props=neo4j_rel_properties
         )
         if success:
             rels_added_neo4j += 1

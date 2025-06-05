@@ -50,7 +50,7 @@ def display_pyvis_graph(graph_data: dict, graph_id: str = "pyvis_graph") -> None
         st.info("No graph data to display.")
         return
 
-    net = Network(notebook=True, cdn_resources='local', height="500px", width="100%", directed=True)
+    net = Network(notebook=True, cdn_resources='remote', height="500px", width="100%", directed=True)
 
     # Add nodes
     for node_info in graph_data.get("nodes", []):
@@ -89,6 +89,7 @@ def display_pyvis_graph(graph_data: dict, graph_id: str = "pyvis_graph") -> None
 
     # Configure physics for better layout initially, then allow user to toggle
     # net.show_buttons(filter_=['physics']) # Shows physics config buttons
+    # solver can be forceAtlas2Based, barnesHut, repulsiveSpringModel
     net.set_options("""
     var options = {
       "physics": {
@@ -103,7 +104,7 @@ def display_pyvis_graph(graph_data: dict, graph_id: str = "pyvis_graph") -> None
         },
         "maxVelocity": 50,
         "minVelocity": 0.1,
-        "solver": "barnesHut", // forceAtlas2Based, barnesHut, repulsiveSpringModel
+        "solver": "barnesHut",
         "timestep": 0.5,
         "stabilization": {
           "enabled": true,
