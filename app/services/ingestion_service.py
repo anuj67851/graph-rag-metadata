@@ -14,7 +14,7 @@ if not logger.hasHandlers():
 
 
 DEFAULT_CHUNK_SIZE = 2000
-DEFAULT_CHUNK_OVERLAP = 200
+DEFAULT_CHUNK_OVERLAP = 500
 
 def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE, chunk_overlap: int = DEFAULT_CHUNK_OVERLAP) -> List[str]:
     if not text: return []

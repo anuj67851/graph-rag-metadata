@@ -1,10 +1,10 @@
 app_name: "My Graph RAG App"
 api_v1_str: "/api/v1"
 
-llm_ingestion_model_name: "gpt-4o-mini"
+llm_ingestion_model_name: "gpt-4o"
 llm_query_ner_model_name: "gpt-4o-mini"
 llm_query_intent_model_name: "gpt-4o-mini"
-llm_query_response_model_name: "gpt-4o"
+llm_query_response_model_name: "gpt-4o-mini"
 llm_embedding_model_name: "text-embedding-3-small"
 embedding_dimension: 1536 # Optional: can be derived or set explicitly
 

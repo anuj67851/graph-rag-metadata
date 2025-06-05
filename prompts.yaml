@@ -37,6 +37,7 @@ user_prompts:
     - "contexts": A list of 1-2 brief sentences from the text_chunk that establish this relationship.
     
     If the schema hint allows dynamic relationships and entity types, you are encouraged to take liberty on adding more types of relationships and entities to make the graph more rich and detailed.
+    Do your best to find more relationships to make the nodes more connected with each other.
     
     Return a single JSON object with two top-level keys: "entities" and "relationships".
     Each key should have a list of the extracted items.
