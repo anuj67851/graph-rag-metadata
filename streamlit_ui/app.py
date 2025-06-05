@@ -63,7 +63,7 @@ def display_pyvis_graph(graph_data: dict, graph_id: str = "pyvis_graph") -> None
         if properties.get("aliases"):
             title_parts.append(f"Aliases: {', '.join(properties['aliases'][:3])}")
         if properties.get("contexts"):
-            title_parts.append(f"Context: {properties['contexts'][0][:100]}...") # Show first context snippet
+            title_parts.append(f"Context: {properties['contexts'][0]}...") # Show first context snippet
 
         # Assign colors based on type (customize as needed)
         color = "#97C2FC" # Default blue
@@ -83,7 +83,7 @@ def display_pyvis_graph(graph_data: dict, graph_id: str = "pyvis_graph") -> None
 
         title_parts = [f"Type: {edge_label}"]
         if properties.get("contexts"):
-            title_parts.append(f"Context: {properties['contexts'][0][:100]}...")
+            title_parts.append(f"Context: {properties['contexts'][0]}...")
 
         net.add_edge(source_id, target_id, title="\n".join(title_parts), label=edge_label)
 

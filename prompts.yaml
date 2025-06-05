@@ -35,7 +35,9 @@ user_prompts:
     - "relationship_type": The type of relationship (e.g., WORKS_FOR, DEVELOPED_BY, USES_TECHNOLOGY, REPORTS_METRIC, PARTNERS_WITH).
     - "target_canonical_name": The canonical_name of the target_entity.
     - "contexts": A list of 1-2 brief sentences from the text_chunk that establish this relationship.
-
+    
+    If the schema hint allows dynamic relationships and entity types, you are encouraged to take liberty on adding more types of relationships and entities to make the graph more rich and detailed.
+    
     Return a single JSON object with two top-level keys: "entities" and "relationships".
     Each key should have a list of the extracted items.
 

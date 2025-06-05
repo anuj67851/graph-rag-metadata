@@ -123,19 +123,15 @@ class Neo4jConnector:
 
     def _convert_neo4j_relationship_to_pydantic(self, rel_input: Any, record_context: Dict[str, Any]) -> Optional[PydanticEdge]:
         try:
-            # Handle tuple input
-            if isinstance(rel_input, tuple):
-                rel_input = rel_input[0]  # Extract relationship from tuple
-
             rel_type_val = ""
             rel_props = {}
             if isinstance(rel_input, Neo4jRelationshipObject):
                 rel_obj = rel_input
                 rel_type_val = rel_obj.type
                 rel_props = dict(rel_obj)
-            elif isinstance(rel_input, dict):
-                rel_props = rel_input
-                rel_type_val = rel_props.get("type", "RELATED_TO")
+            elif isinstance(rel_input, tuple):
+                rel_type_val = rel_input[1]
+                rel_props = dict(enumerate(rel_input))
             else:
                 logger.warning(f"Cannot convert to PydanticEdge, unexpected input type: {type(rel_input)}. Value: {str(rel_input)[:200]}")
                 return None
@@ -263,10 +259,6 @@ class Neo4jConnector:
             item = record['item']
             current_rel_unique_id = record.get('rel_element_id')
 
-            # Handle tuple input
-            if isinstance(item, tuple):
-                item = item[0]  # Extract relationship from tuple
-
             if not current_rel_unique_id:
                 if isinstance(item, Neo4jRelationshipObject):
                     current_rel_unique_id = item.element_id
@@ -280,8 +272,8 @@ class Neo4jConnector:
                 continue
 
             # Get source and target element IDs from record
-            source_element_id = record.get('s_element_id')
-            target_element_id = record.get('t_element_id')
+            source_element_id = record.get('item')[0].get('canonical_name')
+            target_element_id = record.get('item')[2].get('canonical_name')
 
             # Convert to PydanticEdge
             pydantic_edge = self._convert_neo4j_relationship_to_pydantic(item, {

@@ -25,7 +25,7 @@ class Edge(BaseModel):
     source: str = Field(..., description="Identifier of the source node (canonical_name).")
     target: str = Field(..., description="Identifier of the target node (canonical_name).")
     label: str = Field(..., description="Type of the relationship (e.g., WORKS_FOR, LOCATED_IN).")
-    properties: Dict[str, Any] = Field(default_factory=dict, description="Additional properties of the edge, such as contexts or source_document.")
+    properties: Dict[Any, Any] = Field(default_factory=dict, description="Additional properties of the edge, such as contexts or source_document.")
     # Example properties content:
     # {
     #   "contexts": ["Sentence establishing this relationship."],
