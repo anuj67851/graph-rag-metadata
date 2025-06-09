@@ -88,12 +88,12 @@ async def get_full_graph_sample(
         rel_proxy = record.get('r')
 
         if source_node_proxy:
-            s_node = neo4j_conn._convert_neo4j_node_to_pydantic({"n": source_node_proxy})
+            s_node = neo4j_conn._convert_neo4j_node_to_pydantic(source_node_proxy)
             if s_node and s_node.id not in pydantic_nodes_map:
                 pydantic_nodes_map[s_node.id] = s_node
 
         if target_node_proxy:
-            t_node = neo4j_conn._convert_neo4j_node_to_pydantic({"n": target_node_proxy})
+            t_node = neo4j_conn._convert_neo4j_node_to_pydantic(target_node_proxy)
             if t_node and t_node.id not in pydantic_nodes_map:
                 pydantic_nodes_map[t_node.id] = t_node
 
@@ -101,15 +101,15 @@ async def get_full_graph_sample(
             # For PydanticEdge conversion, we need canonical names of source/target
             # The _convert_neo4j_relationship_to_pydantic expects these in the record if not using node objects
             # Here we have the node objects, so we can extract their IDs (canonical_names)
-            s_canonical = source_node_proxy.get("canonical_name", str(source_node_proxy.id))
-            t_canonical = target_node_proxy.get("canonical_name", str(target_node_proxy.id))
+            s_canonical = source_node_proxy.get("canonical_name", None)
+            t_canonical = target_node_proxy.get("canonical_name", None)
 
             edge_record_like = {
                 "r": rel_proxy,
                 "s_canonical_name": s_canonical,
                 "t_canonical_name": t_canonical
             }
-            edge = neo4j_conn._convert_neo4j_relationship_to_pydantic(edge_record_like, 'r')
+            edge = neo4j_conn._convert_neo4j_relationship_to_pydantic(edge_record_like)
             if edge:
                 pydantic_edges.append(edge)
 
