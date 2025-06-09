@@ -82,15 +82,17 @@ user_prompts:
     }}
     If intent is "general_knowledge" or unclear, "target_entities" can be an empty list.
 
-  generate_response_from_subgraph: |
+  generate_response_from_context: |
     User Query: "{user_query}"
-
-    Knowledge Graph Context:
-    ---
-    {subgraph_text}
-    ---
-    (The subgraph_text describes nodes and relationships. Nodes have properties like 'name', 'type', 'aliases', 'contexts', 'source_document'. Relationships connect nodes and have a 'type' and 'contexts'.)
-
-    Based ONLY on the provided "Knowledge Graph Context", answer the "User Query".
-    If the context includes 'source_document' information for relevant nodes or relationships, mention it if appropriate.
-    If the context is insufficient to answer, clearly state that. Do not use any external knowledge.
+    
+    Based ONLY on the context below, provide a comprehensive answer to the user's query.
+    The context may contain raw text chunks and/or a summary of a knowledge graph.
+    Cite the source document (e.g., from '[Source Chunk 1 from 'report.pdf']') when you use information from a specific chunk.
+    If the context is insufficient, clearly state that the information is not available in the provided documents.
+    Do not use any external knowledge. Be concise and directly answer the query.
+    
+    --- Start of Context ---
+    {combined_context}
+    --- End of Context ---
+    
+    Answer:
