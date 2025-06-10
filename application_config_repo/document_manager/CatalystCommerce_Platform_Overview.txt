@@ -1,0 +1,254 @@
+Contents
+
+Introduction 2
+About Meridian Digital 2
+Catalyst Commerce Overview 3
+The Catalyst Commerce Interface 4
+Deployment Architecture 6
+Product Catalog Management 9
+Product Information Management (PIM) 9
+Pricing and Promotions Engine 10
+Inventory Management 11
+The Storefront Experience 13
+Headless Commerce Architecture 13
+Site Builder and CMS 14
+Personalization Engine 16
+Order Management System (OMS) 19
+The Order Lifecycle 19
+Fulfillment and Shipping 22
+Customer Service Tools 22
+Checkout and Payments 23
+Analytics and Reporting 25
+Business Intelligence Dashboards 28
+Governance and Security 29
+Security Overview 29
+User Roles and Permissions 29
+Compliance and Data Privacy 32
+Integrations & Marketplace 33
+The Catalyst API 39
+Technical Specifications 41
+
+Trademark Notices
+
+Catalyst Commerce and the Catalyst logo are trademarks of Meridian Digital Inc.
+
+Shopify® and Shopify Plus® are registered trademarks of Shopify Inc.
+
+Magento® and Adobe Commerce® are registered trademarks of Adobe Inc.
+
+BigCommerce® is a registered trademark of BigCommerce, Pty. Ltd.
+
+All other third-party products mentioned in this document are trademarks of their respective companies.
+
+Introduction
+
+This document provides a comprehensive overview of Catalyst Commerce, the API-first e-commerce platform for high-growth brands and enterprises. E-commerce platforms are the foundation of online retail, providing the tools businesses need to sell their products, manage orders, and create engaging customer experiences. Catalyst Commerce empowers brands to build unique, high-performance storefronts and scale their operations without being constrained by technology.
+
+Catalyst Commerce is a revolutionary platform built on a modern, "headless" architecture. This API-first approach separates the backend commerce engine (handling products, orders, and customers) from the frontend customer experience (the website or "head"). This allows for unparalleled flexibility, performance, and the ability to deliver commerce to any channel—from web and mobile to IoT and in-store kiosks.
+
+Catalyst Commerce is engineered to support the complex needs of modern retail, including B2C, B2B, and multi-store, multi-region operations. It provides a suite of powerful tools for catalog management, order orchestration, and customer engagement, all accessible via a clean, intuitive web-based interface.
+
+About Meridian Digital
+
+Meridian Digital Inc. is a pioneer in API-first and composable commerce technologies. Founded by a team of e-commerce industry veterans in 2018, Meridian Digital is dedicated to providing brands with the freedom and power to create the next generation of digital commerce experiences. Catalyst Commerce support and a global network of certified agency and technology partners are available to help merchants succeed.
+
+Overview
+
+Catalyst Commerce is an API-first platform that enables brands to manage their entire online sales operation. It provides the following major features:
+
+• Product Catalog – A powerful Product Information Management (PIM) system to centrally manage complex product catalogs with unlimited attributes and variations.
+• Inventory Management – Real-time inventory tracking across multiple locations, including warehouses, retail stores, and third-party logistics (3PL) providers.
+• Pricing & Promotions – A sophisticated engine to manage complex pricing rules, tiered pricing for B2B, and a wide variety of promotional campaigns.
+• Order Management – A centralized system (OMS) to manage the entire order lifecycle, from initial placement to fulfillment, shipping, and returns.
+• Headless CMS & Site Builder – Tools to create and manage content-rich storefront experiences without needing to write code, while still offering full headless flexibility.
+• Personalization – AI-driven personalization to deliver tailored product recommendations, content, and offers to each shopper.
+• Multi-Store Management – Manage multiple brands, regions, and currencies from a single backend, with distinct catalogs, pricing, and configurations for each.
+• Analytics – A comprehensive analytics suite with real-time dashboards for sales, marketing, and site performance.
+• Security
+o Authentication for admin users is managed via internal credentials or integration with SSO providers.
+o The platform is PCI DSS Level 1 compliant, ensuring secure handling of payment information.
+o Authorization is governed by a granular, role-based access control system.
+• Extensibility – A comprehensive GraphQL and REST API, along with a marketplace of pre-built apps and connectors, enables seamless integration with any third-party system.
+
+Catalyst Commerce provides a single, unified backend for managing all aspects of the e-commerce business. Its headless nature means merchants are not locked into a specific frontend theme or technology. They can use modern frontend frameworks like React or Vue.js, connect a third-party Content Management System (CMS), or use Catalyst's own powerful Site Builder.
+
+The platform is designed for global scale, with built-in support for multiple languages, currencies, and tax jurisdictions. The powerful workflow and automation engine allows merchants to streamline backend processes, such as order routing and fraud detection.
+
+The Catalyst Commerce Interface
+The Catalyst Command Center is the web-based administrative interface where merchants manage their business. The dashboard provides a real-time overview of sales, orders, and top-selling products.
+
+[Screenshot of the Catalyst Command Center dashboard, showing graphs for Gross Sales, Orders, Conversion Rate, and a list of live visitor activity.]
+
+Navigating to the product catalog provides a clean, efficient interface for managing product data, including images, descriptions, pricing, and inventory levels.
+
+[Screenshot of the Product Detail page in Catalyst, showing tabs for General Information, Pricing, Inventory, Images, and Custom Attributes.]
+
+Deployment Architecture
+
+The Catalyst Commerce Platform features:
+• Cloud-native, multi-tenant, microservices-based architecture.
+• Elastic scalability to handle massive traffic spikes, like on Black Friday.
+• Globally distributed CDN for fast storefront performance worldwide.
+• Web-based administrative interface (Command Center).
+• PCI DSS Level 1 compliant infrastructure.
+• Granular, role-based security model.
+
+Catalyst Commerce is a fully managed SaaS platform. Merchants do not manage any servers. The architecture is designed for extreme reliability and performance, ensuring storefronts are always fast and available.
+
+[Diagram showing the headless architecture. A central Catalyst Commerce "backend" (PIM, Orders, etc.) exposes a GraphQL API. This API is consumed by various "heads": a Web Storefront, a Mobile App, an in-store POS system, and third-party systems.]
+
+Product Catalog Management
+
+Product Information Management (PIM)
+
+At the core of Catalyst is a powerful, built-in PIM system. This allows merchants to manage rich and complex product data centrally, ensuring consistency across all sales channels.
+
+ Flexible Product Models: Define custom product types with unlimited attributes (e.g., color, size, material, technical specs). Supports simple products, variants, bundles, and configurable products.
+ Rich Content: Manage multiple high-resolution images and videos for each product.
+ Categorization: Organize products into a hierarchical category structure for easy navigation on the storefront.
+ Channel Management: Control which products are visible on which sales channel (e.g., a B2B-only product line).
+
+Pricing and Promotions Engine
+
+Catalyst includes a sophisticated engine for managing pricing and promotions without requiring custom code.
+• Price Books: Create multiple price books for different regions, currencies, or customer segments (e.g., a "Wholesale" price book for B2B customers).
+• Tiered Pricing: Offer quantity-based discounts.
+• Promotions: Build a wide range of promotions, such as "20% off a specific category," "Buy One, Get One Free," or "Free shipping on orders over $50." Promotions can be triggered automatically by coupon codes or based on customer segment or cart contents.
+
+Inventory Management
+
+Catalyst provides real-time, centralized inventory management across all your fulfillment locations.
+• Multi-Location Inventory: Track stock levels at multiple warehouses, retail stores, or 3PLs.
+• Inventory Rules: Configure rules to determine which inventory location should fulfill an order based on stock availability and shipping destination.
+• Low-Stock Alerts: Automatically receive notifications when inventory for a product drops below a configured threshold.
+• Backorders and Pre-orders: Configure products to be available for purchase even when out of stock.
+
+The Storefront Experience
+
+Headless Commerce Architecture
+
+Catalyst's API-first, "headless" architecture is its key differentiator. It decouples the frontend presentation layer (the "head") from the backend commerce engine. This provides merchants with several key advantages:
+
+ Freedom of Expression: Use any frontend technology (React, Vue, Angular, etc.) to build a completely unique and highly performant customer experience.
+ Omnichannel Ready: Use the same commerce backend to power a website, a native mobile app, an in-store kiosk, a smart mirror, or any other customer touchpoint.
+ Faster Performance: Modern frontend frameworks can deliver "app-like" speeds, leading to higher conversion rates.
+ Developer Efficiency: Frontend and backend teams can work independently and in parallel.
+
+Site Builder and CMS
+
+While Catalyst offers full headless freedom, it also includes a powerful, no-code Site Builder for merchants who want to build and manage their storefront without a large development team.
+
+• Visual Drag-and-Drop Editor: Build custom pages and layouts using a library of pre-built, responsive components (e.g., hero banners, product carousels, testimonials).
+• Integrated CMS: Manage content-rich pages like blogs, "About Us" pages, and landing pages directly within Catalyst.
+• Theming: Customize the look and feel of the storefront with full control over fonts, colors, and styles.
+
+[Screenshot of the Catalyst Site Builder, showing a user dragging a "Product Grid" component onto a homepage layout.]
+
+Personalization Engine
+
+Catalyst includes an AI-powered personalization engine to create tailored shopping experiences for every visitor.
+• Product Recommendations: Display personalized recommendations on the homepage, product pages, and in the cart (e.g., "Customers who bought this also bought...", "Trending in your area").
+• Content Personalization: Show different hero banners or promotional content based on the visitor's location, browsing history, or customer segment.
+• Segmentation: Create dynamic customer segments based on attributes like purchase history, location, or site behavior (e.g., "VIP Customers," "First-time Visitors").
+
+Order Management System (OMS)
+
+The Order Lifecycle
+
+Catalyst includes a robust, built-in Order Management System (OMS) to handle the entire order lifecycle from the moment a customer clicks "Buy".
+
+ Order Capture: Orders are captured from all sales channels and centralized in a single dashboard.
+ Fraud Analysis: Every order is automatically analyzed for fraud risk using a machine learning model. High-risk orders are flagged for manual review.
+ Order Routing: The system automatically routes the order to the optimal fulfillment location based on pre-configured rules (e.g., closest warehouse with available stock).
+ Status Updates: The order moves through various statuses (e.g., "Awaiting Fulfillment," "Shipped," "Delivered," "Returned"), with automated email notifications sent to the customer at each step.
+
+Fulfillment and Shipping
+
+The OMS provides tools to streamline the fulfillment process.
+• Pick Lists and Packing Slips: Generate documents for warehouse staff to pick and pack orders efficiently.
+• Shipping Carrier Integration: Connect directly with major carriers like UPS, FedEx, and DHL to get real-time shipping rates and print shipping labels with a single click.
+• Tracking: Shipment tracking numbers are automatically associated with the order and sent to the customer.
+
+Customer Service Tools
+
+The OMS provides customer service representatives (CSRs) with a complete view of a customer's order history. From the order screen, a CSR can:
+• Process a return or exchange.
+• Issue a full or partial refund.
+• Re-send order confirmation emails.
+• View payment and fraud details.
+
+Checkout and Payments
+
+Catalyst offers a fully customizable and optimized checkout experience.
+• One-Page Checkout: A streamlined, mobile-friendly checkout process designed to maximize conversion rates.
+• Payment Gateway Integration: Pre-built integrations with dozens of payment gateways like Stripe, Braintree, and PayPal, allowing merchants to accept credit cards, digital wallets, and "Buy Now, Pay Later" options.
+• PCI Compliance: The Catalyst checkout is hosted in a secure, PCI DSS Level 1 compliant environment, which significantly reduces the merchant's compliance burden.
+
+Analytics and Reporting
+
+Catalyst includes a comprehensive Business Intelligence (BI) and analytics suite.
+• Real-time Dashboards: Monitor key e-commerce metrics like sales, conversion rate, average order value (AOV), and customer lifetime value (LTV).
+• Reports Library: A collection of pre-built reports covering sales, products, customers, and marketing attribution.
+• Cohort Analysis: Analyze the behavior of different customer groups over time to understand retention and LTV.
+• Custom Reporting: Build and save custom reports to answer specific business questions.
+
+Business Intelligence Dashboards
+
+[Screenshot of an analytics dashboard in Catalyst, with charts showing sales trends, top products by revenue, and a map visualizing sales by region.]
+
+Governance and Security
+
+Security Overview
+
+Security is a top priority for Catalyst Commerce. The platform is architected to protect merchant and customer data and to ensure the highest levels of availability.
+
+Authentication – Admin users sign in with their Catalyst credentials or via a corporate SSO provider (SAML/OIDC).
+
+Authorization – Access to the Catalyst Command Center is controlled by a Role-Based Access Control (RBAC) system.
+
+User Roles and Permissions
+
+An administrator can create custom roles with granular permissions to control what users can see and do.
+
+Example Roles:
+• Store Administrator: Has full access to all settings and data.
+• Product Manager: Can manage the product catalog but cannot see sensitive order or customer data.
+• Fulfillment Agent: Can view and process orders but cannot modify products or issue refunds.
+• Marketing Manager: Can manage promotions and CMS content but cannot access financial reports.
+
+Compliance and Data Privacy
+
+• PCI DSS Level 1: The platform is certified as PCI DSS Level 1 compliant, the highest level of compliance for handling credit card data.
+• GDPR & CCPA: The platform includes tools to help merchants comply with data privacy regulations, such as features for data access requests and permanent deletion of customer records.
+
+Integrations & Marketplace
+
+Catalyst Commerce is designed to be the core of a "composable" commerce stack. It integrates seamlessly with other best-in-class tools.
+• API-First: The comprehensive GraphQL API allows for deep integration with any external system, such as an ERP, CRM, or marketing automation platform.
+• App Marketplace: A marketplace of pre-built apps and connectors for popular third-party services, such as tax calculation (Avalara), email marketing (Klaviyo), and customer support (Zendesk).
+
+The Catalyst API
+
+The primary method for integration is the GraphQL API. GraphQL provides a more efficient and flexible way to query data compared to traditional REST APIs. It allows developers to request exactly the data they need in a single API call, which is ideal for building high-performance frontend experiences.
+
+Technical Specifications
+
+Catalyst Commerce is developed with the following technical features:
+
+• Cloud-native, serverless, and microservices-based architecture.
+• Backend services written in TypeScript (Node.js) and Go.
+• Primary API is GraphQL, with REST APIs available for certain functions.
+• Uses a combination of relational (PostgreSQL) and NoSQL (DynamoDB) databases for optimal performance and scale.
+• Frontend Site Builder built with the React framework.
+• Web-based administration and configuration tools.
+
+Catalyst Commerce Server Environment
+
+Catalyst Commerce is a fully managed SaaS platform. All infrastructure, scaling, security, and maintenance are handled by Meridian Digital.
+
+Catalyst Commerce Client Requirements
+
+Requirements for managing the Catalyst Commerce store:
+
+• A modern, evergreen web browser (Chrome, Firefox, Safari, Edge).
+• A stable internet connection.

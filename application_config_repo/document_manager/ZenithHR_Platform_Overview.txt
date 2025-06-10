@@ -1,0 +1,271 @@
+Contents
+
+Introduction 2
+About Ascendify Solutions 2
+ZenithHR Platform Overview 3
+The ZenithHR Interface 4
+Platform Architecture 6
+Core HR and Employee Data 9
+The Employee Record 9
+Organizational Charting 10
+Self-Service Portals 11
+Recruiting and Applicant Tracking 13
+Candidate Sourcing 13
+The Applicant Tracking System (ATS) 14
+Offer Management 16
+Performance Management 19
+Goal Setting (OKRs) 19
+Performance Reviews 22
+Continuous Feedback 22
+Onboarding and Offboarding 23
+Time, Attendance, and Payroll 25
+Reporting and People Analytics 28
+Governance and Security 29
+Security Overview 29
+Permission Roles 29
+Data Privacy and Compliance 32
+Platform Administrator Logon 33
+Integrations & API 39
+Technical Specifications 41
+
+Trademark Notices
+
+ZenithHR and the ZenithHR logo are trademarks of Ascendify Solutions Inc.
+
+Workday® is a registered trademark of Workday, Inc.
+
+SAP® SuccessFactors® is a registered trademark of SAP SE.
+
+Oracle® is a registered trademark of Oracle Corporation.
+
+All other third-party products mentioned in this document are trademarks of their respective companies.
+
+Introduction
+
+This document provides a comprehensive overview of ZenithHR, the unified Human Capital Management (HCM) platform designed to manage the entire employee lifecycle. Human Resources Information Systems (HRIS) are the core operational systems for HR departments, enabling them to manage employee data, streamline processes, and deliver strategic value to the business. ZenithHR empowers organizations to attract, retain, and develop top talent while improving operational efficiency and ensuring compliance.
+
+ZenithHR is a modern, cloud-native platform built on a unified data model. It leverages automation and analytics to provide a seamless and engaging experience for employees, managers, and HR professionals alike. ZenithHR is delivered as a secure, enterprise-grade cloud service, accessible from any device via a web browser. There is no client-side software to install, and the user experience is designed to be as intuitive and user-friendly as the best consumer applications.
+
+ZenithHR is engineered to support the diverse needs of global organizations, from core HR and payroll to talent acquisition and performance management. Pre-configured process templates, compliant with local regulations, are available for numerous countries and can be easily customized by HR administrators without requiring IT support.
+
+About Ascendify Solutions
+
+Ascendify Solutions Inc. is a visionary provider of cloud-based HCM software, committed to transforming the world of work. Founded in 2017, Ascendify Solutions helps organizations build high-performing teams by providing tools that are intelligent, engaging, and easy to use. ZenithHR support, implementation services, and strategic HR advisory are available globally through Ascendify's professional services team and a curated network of partners.
+
+Overview
+
+ZenithHR is a unified HCM platform that enables organizations to manage their workforce from hire to retire. It provides the following major features:
+
+• Core HR – A single system of record for all employee data, including personal information, job history, compensation, and documents.
+• Recruiting – A complete applicant tracking system (ATS) to source, screen, interview, and hire top talent.
+• Onboarding – Automated workflows to provide a smooth and engaging onboarding experience for new hires.
+• Performance Management – Tools for setting goals, conducting performance reviews, and facilitating continuous feedback.
+• Compensation – Manage salary, bonus, and equity planning with powerful modeling and approval workflows.
+• Time & Attendance – Track employee time, manage leave requests, and ensure accurate payroll processing.
+• Payroll – A robust, integrated payroll engine to pay your global workforce accurately and on time.
+• People Analytics – Real-time dashboards and reporting to provide strategic insights into workforce trends, from headcount to turnover.
+• Security
+o Authentication is managed via internal credentials or integration with corporate identity providers using SAML 2.0 or OIDC.
+o Authorization is governed by a sophisticated, role-based security framework that controls access to data and transactions down to the field level.
+• Extensibility – Connect to the broader business ecosystem with a comprehensive REST API and a library of pre-built integrations.
+
+ZenithHR provides a single source of truth for all people data, eliminating data silos and ensuring consistency across all HR processes. The platform is built around an employee-centric design, offering intuitive self-service capabilities for employees and managers, which reduces the administrative burden on HR teams.
+
+The platform's powerful workflow engine allows HR teams to automate complex, multi-step processes like promotions, transfers, and offboarding. These workflows can include approvals, notifications, and task assignments, ensuring that processes are executed consistently and efficiently.
+
+Security and data privacy are at the core of the ZenithHR architecture. The security model is designed to meet the complex requirements of global enterprises, with granular controls to ensure compliance with regulations like GDPR and CCPA.
+
+ZenithHR features a consumer-grade user interface that drives user adoption and engagement.
+
+• Clean, modern design accessible from any device.
+• Personalized dashboards for employees, managers, and administrators.
+• A powerful global search to quickly find people, reports, and tasks.
+• An integrated organizational chart for easy navigation.
+
+The ZenithHR Interface
+When an employee logs in, their personalized homepage provides quick access to their tasks, company news, personal information, and team directory.
+
+[Screenshot of the ZenithHR Employee Homepage, showing widgets for "My To-Do's," "Company Announcements," "My Team," and "Quick Links" to pay stubs and time off.]
+
+A manager's view includes additional widgets for team-related tasks, such as pending approvals for time off or performance reviews. Clicking on an employee's profile provides a comprehensive view of their public information.
+
+[Screenshot of the ZenithHR Employee Profile page, showing a profile picture, job title, contact information, and tabs for performance, compensation, and career history.]
+
+Platform Architecture
+
+The ZenithHR Platform features:
+• Multi-tenant, cloud-native architecture built for scale and agility.
+• A unified data model and object-oriented structure.
+• Hosted in secure, independently audited data centers (SOC 2, ISO 27001).
+• Web-based administration and business process configuration.
+• Native integration with enterprise identity providers.
+• Highly configurable, role-based security framework.
+
+ZenithHR is offered as a pure SaaS solution. All infrastructure, maintenance, and bi-annual feature updates are managed by Ascendify Solutions, ensuring customers are always on the latest version.
+
+[Diagram of the ZenithHR architecture, showing a unified data core serving various application microservices (Recruiting, Performance, Payroll) which are accessed via a single API layer by web and mobile clients.]
+
+Core HR and Employee Data
+
+The Employee Record
+
+The Employee Record is the central hub of all information related to an employee within ZenithHR. It serves as the single source of truth, ensuring data consistency across all modules.
+
+The record is a comprehensive, historical repository of an employee's journey with the company, including:
+ Personal & Contact Information
+ Job & Employment History: All positions, promotions, and transfers.
+ Compensation History: Salary, bonus, and equity changes over time.
+ Talent Profile: Skills, certifications, education, and language proficiency.
+ Secure Document Storage: Offer letters, employment contracts, and performance reviews.
+
+Organizational Charting
+
+ZenithHR includes a dynamic, interactive organizational chart that is automatically generated from the system's supervisory data. Users can navigate the entire company structure, view team relationships, and access public employee profiles.
+
+The org chart is a powerful tool for:
+• New Hires: To understand the company structure and who's who.
+• Managers: To view their team structure, including open positions (vacancies).
+• HR & Leadership: For workforce planning and visualizing organizational changes.
+
+[Screenshot of the interactive Org Chart, showing a hierarchical tree of employee profile cards.]
+
+Self-Service Portals
+
+A key principle of ZenithHR is to empower users with self-service capabilities, reducing the administrative workload on HR.
+
+• Employee Self-Service (ESS): Employees can view and update their own personal information (like address or emergency contacts), view their pay stubs, request time off, and access their performance reviews.
+• Manager Self-Service (MSS): Managers can perform a wide range of actions for their direct reports, such as initiating promotions or compensation changes, approving requests, and accessing team dashboards. All transactions are routed through configurable approval workflows.
+
+Recruiting and Applicant Tracking
+
+Candidate Sourcing
+
+The ZenithHR recruiting module helps organizations attract and source top talent. It provides tools to manage a multi-channel sourcing strategy.
+
+ Career Site Builder: Create and host a branded, mobile-friendly career site with an up-to-date list of all open positions.
+ Job Board Integrations: Automatically post open jobs to popular boards like LinkedIn, Indeed, and others with a single click.
+ Employee Referral Program: Manage and track employee referrals, a key source of high-quality candidates.
+ Agency Portals: Provide a secure portal for external recruitment agencies to submit candidates directly into the system.
+
+The Applicant Tracking System (ATS)
+
+The ATS is the core of the recruiting module, providing a centralized platform for managing the entire hiring process from application to hire.
+
+• Configurable Hiring Stages: Define custom recruitment pipelines for different types of roles (e.g., "Technical," "Sales," "Executive").
+• Candidate Dashboard: Recruiters and hiring managers have a clear, Kanban-style view of all candidates in their pipeline, organized by stage.
+• Collaboration Tools: The hiring team can share feedback, leave interview notes, and rate candidates using a standardized scorecard, all within the candidate's profile.
+• Automated Communication: Use templates and automation rules to send acknowledgements, rejection notices, and interview scheduling requests.
+
+[Screenshot of the ATS Kanban view, showing candidate cards being moved through stages like "New Applicant," "Screening," "Interview," and "Offer."]
+
+Offer Management
+
+Once a final candidate is selected, ZenithHR streamlines the offer management process.
+• Offer Letter Generation: Create dynamic offer letters from pre-approved templates that automatically pull in candidate and job information.
+• Approval Workflows: Route the offer for internal approval (e.g., from HR and Finance) before it is extended to the candidate.
+• E-Signature: Send the offer letter to the candidate for secure electronic signature directly through the platform.
+• Once the offer is accepted, the candidate's record can be seamlessly converted into a new employee record, initiating the onboarding process.
+
+Performance Management
+
+The ZenithHR Performance Management module helps organizations align employee goals with business objectives and foster a culture of continuous development.
+
+Goal Setting (OKRs)
+
+The platform supports modern goal-setting frameworks like Objectives and Key Results (OKRs).
+ Goal Creation: Employees and managers can collaboratively set and track goals throughout the year.
+ Goal Alignment: Goals can be aligned upwards to a manager's or a company-level goal, creating a clear line of sight from individual contributions to top-level business objectives.
+ Progress Tracking: Employees can regularly update their progress on key results, providing real-time visibility to their manager.
+
+Performance Reviews
+
+ZenithHR allows for the creation of flexible performance review cycles.
+• Configurable Templates: Build review forms with a mix of question types, including competency ratings, goal assessments, and open-ended questions.
+• Multi-Rater Feedback (360s): Easily manage 360-degree feedback processes by gathering input from peers, direct reports, and managers.
+• Calibration: Provide tools for managers to calibrate review ratings across their teams to ensure fairness and consistency.
+
+Continuous Feedback
+
+To supplement formal reviews, ZenithHR encourages a culture of ongoing feedback.
+• Request/Give Feedback: Any employee can request feedback from or give unsolicited feedback to any other employee at any time.
+•
+Praise: A public recognition feature where employees can give "praise" or "kudos" to colleagues for a job well done, which is visible on the employee's profile.
+
+Onboarding and Offboarding
+
+ZenithHR automates the logistical and cultural aspects of employee transitions. The Onboarding module provides new hires with a guided experience, starting from the moment they accept their offer.
+
+• Onboarding Portal: A dedicated portal for new hires to complete paperwork, learn about the company culture, and meet their team before their first day.
+• Automated Task Lists: Create checklists of tasks for the new hire, their manager, HR, and IT (e.g., "Set up laptop," "Assign a buddy," "Complete compliance training").
+
+Similarly, the Offboarding module ensures a smooth and compliant exit process for departing employees, managing everything from knowledge transfer to final pay and asset return.
+
+Time, Attendance, and Payroll
+
+ZenithHR provides a unified solution for global time, absence, and payroll management.
+• Time Tracking: Employees can clock in/out via web or mobile, or enter hours on a timesheet. Rules for overtime are configurable by jurisdiction.
+• Absence Management: Manage all types of leave (vacation, sick, parental) with configurable accrual policies and approval workflows.
+• Integrated Payroll: A powerful payroll engine that processes payments, calculates taxes, and handles deductions for multiple countries, all from the same system. This eliminates the need for error-prone integrations with third-party payroll providers.
+
+Reporting and People Analytics
+
+The platform includes a powerful reporting suite to transform HR data into strategic insights.
+• Standard Reports Library: A library of hundreds of pre-built reports for common needs like headcount, turnover, compensation analysis, and diversity metrics.
+• Custom Report Builder: A drag-and-drop tool for HR analysts to create custom reports and visualizations.
+• Executive Dashboards: High-level dashboards that provide leadership with a real-time pulse on the health of the organization's human capital.
+
+Governance and Security
+
+Security Overview
+
+Data security and privacy are paramount in an HR system. ZenithHR's security framework is designed to provide robust, granular control over all data and processes.
+
+Authentication – User sign-in is managed by ZenithHR's internal identity service or can be federated to a corporate identity provider (IdP) via SAML 2.0 or OIDC, allowing for single sign-on (SSO).
+
+Authorization – Authorization is controlled by a sophisticated Role-Based Access Control (RBAC) model. A user's access is determined by the roles they are assigned.
+
+Permission Roles
+
+A Role defines what a user can see and do within ZenithHR. Permissions are highly granular and can be configured for specific business processes, reports, and even individual fields.
+
+Example Roles:
+• Employee: Can view and edit their own information.
+• Manager: Inherits "Employee" access, and also gains access to view their direct reports' data and initiate manager-specific transactions.
+• HR Business Partner (HRBP): Can view and manage all employee data for the specific business units they support.
+• Recruiter: Can access the recruiting module and manage candidate data, but not sensitive employee data like compensation.
+• System Administrator: Can configure business processes, manage security, and access all data.
+
+Data Privacy and Compliance
+
+The security model is designed to enforce data privacy policies and help organizations comply with regulations like GDPR. For example, access to sensitive personal data can be restricted to only specific roles (like a Payroll Administrator) located in a specific country.
+
+Platform Administrator Logon
+
+A primary system administrator account is created during the initial tenant provisioning. This user is assigned the System Administrator role, which has irrevocable access to all data and configuration. This account should be used sparingly, secured with MFA, and its activities should be regularly audited.
+
+Integrations & API
+
+ZenithHR offers a comprehensive RESTful API that provides programmatic access to all business objects and processes within the platform. The API is used to build custom integrations with other enterprise systems, such as finance/ERP systems, learning management systems (LMS), and benefits administration providers.
+
+Technical Specifications
+
+ZenithHR is developed with the following technical features:
+
+• Cloud-native microservices architecture.
+• Backend services developed in Python (Django) and Kotlin.
+• Frontend developed using the Vue.js framework for a dynamic and responsive user experience.
+• Uses a multi-model database strategy, with PostgreSQL for transactional data and a graph database for organizational structures.
+• Web-based, no-code configuration tools for business processes, security, and reporting.
+• Authentication via OpenID Connect (OIDC) and SAML 2.0.
+
+ZenithHR Server Environment
+
+ZenithHR is a fully managed Software-as-a-Service (SaaS) platform. All server infrastructure, maintenance, and upgrades are managed by Ascendify Solutions.
+
+ZenithHR Client Requirements
+
+Requirements for the ZenithHR client are as follows:
+
+• A modern, evergreen web browser (Chrome, Firefox, Safari, Edge).
+• A stable internet connection.
+• The ZenithHR mobile app for iOS or Android for on-the-go access.
