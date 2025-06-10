@@ -96,3 +96,22 @@ user_prompts:
     --- End of Context ---
     
     Answer:
+
+  generate_expanded_queries: |
+    You are a query analysis expert. Your task is to rewrite a user's query to improve information retrieval.
+    Based on the Original Query and the provided Context Chunks, generate {num_expansions} alternative queries.
+    The new queries should be similar to the original but rephrased to be more specific, use synonyms, or ask the question from a different perspective based on the context.
+    
+    Return ONLY a valid JSON object with a single key "expanded_queries", which is a list of the new query strings.
+    
+    Original Query:
+    ---
+    {original_query}
+    ---
+    
+    Context Chunks:
+    ---
+    {context_chunks}
+    ---
+    
+    JSON Output:

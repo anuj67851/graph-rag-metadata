@@ -1,50 +1,71 @@
 import logging
+import os
+from logging.handlers import TimedRotatingFileHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings # For app name, API prefix, etc.
+from app.core.config import settings
 from app.apis import router_ingestion, router_query, router_graph
 
-# Import lifecycle event handlers from connectors
+# Import lifecycle event handlers from all connectors
 from app.graph_db.neo4j_connector import init_neo4j_driver, close_neo4j_driver
-from app.vector_store.faiss_connector import init_vector_store, save_vector_store_on_shutdown
-# (OpenAI client is typically initialized on import or lazily, no explicit init/shutdown needed here unless specific resource management)
+from app.vector_store.weaviate_connector import init_vector_store, save_vector_store_on_shutdown
+from app.database.sqlite_connector import get_sqlite_connector
 
-# Configure logging for the main application
-# You might want to use a more sophisticated logging setup for production (e.g., structured logging, external log management)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# --- Advanced Logging Configuration ---
+# Create logs directory if it doesn't exist
+log_dir = os.path.dirname(settings.LOG_FILE_PATH)
+os.makedirs(log_dir, exist_ok=True)
+
+# Define the log format
+log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Get the root logger
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO) # Set the minimum level for the root logger
+
+# Configure Console Handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+root_logger.addHandler(console_handler)
+
+# Configure Timed Rotating File Handler
+# This will create a new log file at midnight and keep the last 7 files
+file_handler = TimedRotatingFileHandler(
+    filename=settings.LOG_FILE_PATH,
+    when='midnight',
+    backupCount=settings.LOG_RETENTION_DAYS,
+    encoding='utf-8'
+)
+file_handler.setFormatter(log_formatter)
+root_logger.addHandler(file_handler)
+
+# Get a logger for this specific module
 logger = logging.getLogger(__name__)
 
 # --- FastAPI App Initialization ---
-# The title and description will appear in the auto-generated API docs (e.g., /docs)
 app = FastAPI(
-    title=settings.APP_NAME or "Graph RAG API",
-    description="API for a Retrieval Augmented Generation system using a Knowledge Graph.",
-    version="0.1.0",
-    # openapi_url=f"{settings.API_V1_STR}/openapi.json" # If using an API version prefix for docs
+    title=settings.APP_NAME,
+    description="API for an advanced Retrieval Augmented Generation system using a Knowledge Graph.",
+    version="1.0.0",
 )
 
 # --- CORS Middleware ---
-# This is important to allow your Streamlit UI (running on a different port)
-# to make requests to this FastAPI backend.
-# For production, you should restrict origins to the specific domain of your Streamlit app.
+# Allows the Streamlit UI (on a different port) to communicate with this backend.
 origins = [
-    "http://localhost",        # Common base for local dev
-    "http://localhost:8501",   # Default Streamlit port
+    "http://localhost",
+    "http://localhost:8501", # Default Streamlit port
     "http://127.0.0.1",
     "http://127.0.0.1:8501",
-    # Add any other origins if needed (e.g., your deployed Streamlit app's URL)
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       # Allows specific origins
-    # allow_origins=["*"],       # Allows all origins (less secure, use for broad testing only)
-    allow_credentials=True,      # Allows cookies to be included in requests
-    allow_methods=["*"],         # Allows all standard HTTP methods
-    allow_headers=["*"],         # Allows all headers
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
 
 # --- Application Lifecycle Events (Startup & Shutdown) ---
 @app.on_event("startup")
@@ -52,21 +73,30 @@ async def startup_event():
     """
     Actions to perform when the application starts up.
     - Initialize Neo4j driver and ensure constraints.
-    - Initialize/load FAISS vector store.
+    - Initialize Weaviate vector store and ensure schema.
+    - Initialize SQLite database and ensure schema.
     """
     logger.info("Application startup sequence initiated...")
+    try:
+        # Initialize SQLite and its schema
+        sqlite_conn = get_sqlite_connector()
+        sqlite_conn.initialize_schema()
+        logger.info("SQLite connector initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error during SQLite initialization on startup: {e}", exc_info=True)
+        # We might want to exit if a critical DB fails
+
     try:
         await init_neo4j_driver()
         logger.info("Neo4j driver initialization process completed.")
     except Exception as e:
         logger.error(f"Error during Neo4j driver initialization on startup: {e}", exc_info=True)
-        # Depending on severity, you might want to prevent app startup or run in a degraded mode.
 
     try:
         await init_vector_store()
-        logger.info("FAISS vector store initialization process completed.")
+        logger.info("Weaviate vector store initialization process completed.")
     except Exception as e:
-        logger.error(f"Error during FAISS vector store initialization on startup: {e}", exc_info=True)
+        logger.error(f"Error during Weaviate vector store initialization on startup: {e}", exc_info=True)
 
     logger.info(f"'{settings.APP_NAME}' application started successfully.")
 
@@ -75,7 +105,8 @@ async def shutdown_event():
     """
     Actions to perform when the application shuts down.
     - Close Neo4j driver.
-    - Save FAISS vector store.
+    - Close SQLite connection.
+    - Weaviate client does not need an explicit close.
     """
     logger.info("Application shutdown sequence initiated...")
     try:
@@ -85,45 +116,32 @@ async def shutdown_event():
         logger.error(f"Error closing Neo4j driver on shutdown: {e}", exc_info=True)
 
     try:
-        await save_vector_store_on_shutdown() # Ensures FAISS index is saved
-        logger.info("FAISS vector store save process on shutdown completed.")
+        await save_vector_store_on_shutdown() # Logs a message for Weaviate
+        logger.info("Weaviate vector store shutdown process completed.")
     except Exception as e:
-        logger.error(f"Error saving FAISS vector store on shutdown: {e}", exc_info=True)
+        logger.error(f"Error during Weaviate shutdown: {e}", exc_info=True)
+
+    try:
+        sqlite_conn = get_sqlite_connector()
+        sqlite_conn.close_connection()
+        logger.info("SQLite connection closed.")
+    except Exception as e:
+        logger.error(f"Error closing SQLite connection on shutdown: {e}", exc_info=True)
 
     logger.info(f"'{settings.APP_NAME}' application shut down gracefully.")
 
-
 # --- Include API Routers ---
-# Routers defined in app/apis/ are included here.
-# You can use a common prefix for all API endpoints if desired, e.g., settings.API_V1_STR.
-# For simplicity, the prefixes are currently defined within each router file.
-# If you want a global /api/v1 prefix, you would add it here when including the router.
-# e.g., app.include_router(router_ingestion.router, prefix=settings.API_V1_STR)
-# and then remove the prefix from the router files themselves, or make them relative.
-
-common_api_prefix = settings.API_V1_STR if hasattr(settings, 'API_V1_STR') and settings.API_V1_STR else "/api/v1"
+# Using the common API prefix from our settings file.
+common_api_prefix = settings.API_V1_STR
 
 app.include_router(router_ingestion.router, prefix=common_api_prefix)
 app.include_router(router_query.router, prefix=common_api_prefix)
 app.include_router(router_graph.router, prefix=common_api_prefix)
 
-# --- Root Endpoint (Optional) ---
+# --- Root Endpoint ---
 @app.get("/", tags=["Root"])
 async def read_root():
-    """
-    A simple root endpoint to confirm the API is running.
-    """
+    """A simple root endpoint to confirm the API is running."""
     return {
-        "message": f"Welcome to the {settings.APP_NAME or 'Graph RAG API'}. API documentation is available at /docs or /redoc."
+        "message": f"Welcome to the {settings.APP_NAME}. API documentation is available at /docs or /redoc."
     }
-
-# To run this application (from the 'graph_rag_app' root directory):
-# uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-#
-# Then you can access:
-# - API root: http://localhost:8000/
-# - Interactive API docs (Swagger UI): http://localhost:8000/docs
-# - Alternative API docs (ReDoc): http://localhost:8000/redoc
-# - Ingestion endpoint example: http://localhost:8000/api/v1/ingest/upload_file/ (POST)
-# - Query endpoint example: http://localhost:8000/api/v1/query/ (POST)
-# - Graph endpoint example: http://localhost:8000/api/v1/graph/full_sample (GET)

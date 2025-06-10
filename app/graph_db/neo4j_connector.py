@@ -2,7 +2,6 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from neo4j import AsyncGraphDatabase, AsyncDriver
-from neo4j.graph import Node as Neo4jNodeObject, Relationship as Neo4jRelationshipObject
 from neo4j.exceptions import Neo4jError, ServiceUnavailable
 from app.core.config import settings
 from app.models.common_models import Node as PydanticNode, Edge as PydanticEdge, Subgraph
@@ -10,6 +9,7 @@ from app.models.common_models import Node as PydanticNode, Edge as PydanticEdge,
 logger = logging.getLogger(__name__)
 if not logger.hasHandlers():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 class Neo4jConnector:
     _driver: Optional[AsyncDriver] = None
@@ -84,15 +84,28 @@ class Neo4jConnector:
                 await result.consume()
                 return records_list
         except Exception as e:
-            logger.error(f"Error during Cypher query execution: {e}\nQuery: {query}\nParams: {parameters}", exc_info=True)
+            logger.error(f"Error during Cypher query execution: {e}\nQuery: {query}\nParams: {parameters}",
+                         exc_info=True)
             return []
 
     async def merge_entity(self, entity_type: str, canonical_name: str, properties: Dict[str, Any]) -> bool:
-        """Merges a node into the graph, creating or updating it."""
-        props = {"canonical_name": canonical_name, **properties}
-        query = f"MERGE (n:{entity_type} {{canonical_name: $canonical_name}}) ON CREATE SET n = $props ON MATCH SET n += $props"
+        """Merges a node, intelligently updating list-based properties like 'source_document_filename'."""
+        query = f"""
+        MERGE (n:{entity_type} {{canonical_name: $canonical_name}})
+        ON CREATE SET n = $props, n.source_document_filename = [$source_file]
+        ON MATCH SET n += {{contexts: [ctx IN n.contexts + $props.contexts WHERE ctx IS NOT NULL]}},
+                     n.original_mentions = [mention IN n.original_mentions + $props.original_mentions WHERE mention IS NOT NULL],
+                     n.source_document_filename = [file IN n.source_document_filename + $source_file WHERE file IS NOT NULL]
+        """
+        props_for_create = {"canonical_name": canonical_name, **properties}
+
+        params = {
+            "canonical_name": canonical_name,
+            "props": props_for_create,
+            "source_file": properties.get("source_document_filename")
+        }
         try:
-            await self.execute_query(query, {"canonical_name": canonical_name, "props": props})
+            await self.execute_query(query, params)
             logger.info(f"Merged entity: {entity_type} - {canonical_name}")
             return True
         except Exception as e:
@@ -100,9 +113,20 @@ class Neo4jConnector:
             return False
 
     async def merge_relationship(self, s_type: str, s_name: str, t_type: str, t_name: str, r_type: str, props: Dict[str, Any]) -> bool:
-        """Merges a relationship between two nodes."""
-        query = f"MATCH (s:{s_type} {{canonical_name: $s_name}}), (t:{t_type} {{canonical_name: $t_name}}) MERGE (s)-[r:{r_type}]->(t) ON CREATE SET r = $props ON MATCH SET r += $props"
-        params = {"s_name": s_name, "t_name": t_name, "props": props}
+        """Merges a relationship, intelligently updating list-based properties."""
+        query = f"""
+        MATCH (s:{s_type} {{canonical_name: $s_name}}), (t:{t_type} {{canonical_name: $t_name}})
+        MERGE (s)-[r:{r_type}]->(t)
+        ON CREATE SET r = $props, r.source_document_filename = [$source_file]
+        ON MATCH SET r.contexts = [ctx IN r.contexts + $props.contexts WHERE ctx IS NOT NULL],
+                     r.source_document_filename = [file IN r.source_document_filename + $source_file WHERE file IS NOT NULL]
+        """
+        params = {
+            "s_name": s_name,
+            "t_name": t_name,
+            "props": props,
+            "source_file": props.get("source_document_filename")
+        }
         try:
             await self.execute_query(query, params)
             logger.info(f"Merged relationship: ({s_name})-[{r_type}]->({t_name})")
@@ -125,7 +149,8 @@ class Neo4jConnector:
         node_id = props.get("canonical_name", "No Id Found")
         return PydanticNode(id=node_id, label=props.get("canonical_name", node_id), type=primary_type, properties=props)
 
-    def _convert_neo4j_relationship_to_pydantic(self, rel: tuple, nodes_map: Dict[str, PydanticNode]) -> Optional[PydanticEdge]:
+    def _convert_neo4j_relationship_to_pydantic(self, rel: tuple, nodes_map: Dict[str, PydanticNode]) -> Optional[
+        PydanticEdge]:
         """Converts a Neo4j Relationship object to a Pydantic Edge model."""
         source_id_by_element = str(rel[0]['canonical_name'])
         target_id_by_element = str(rel[2]['canonical_name'])
@@ -197,7 +222,6 @@ class Neo4jConnector:
         unique_edges = list({(e.source, e.target, e.label): e for e in pydantic_edges}.values())
         return Subgraph(nodes=list(pydantic_nodes_map.values()), edges=unique_edges)
 
-
     async def get_subgraph_for_entities(self, canonical_names: List[str], hop_depth: int = 1) -> Subgraph:
         """Retrieves an N-hop subgraph for a list of seed entities."""
         if not canonical_names:
@@ -224,14 +248,17 @@ class Neo4jConnector:
         # The corrected _process_subgraph_results can now handle this directly.
         return self._process_subgraph_results(results)
 
+
 # --- Singleton Management ---
 neo4j_connector_instance: Optional[Neo4jConnector] = None
+
 
 async def get_neo4j_connector() -> Neo4jConnector:
     global neo4j_connector_instance
     if neo4j_connector_instance is None:
         neo4j_connector_instance = Neo4jConnector()
     return neo4j_connector_instance
+
 
 async def init_neo4j_driver():
     try:
@@ -240,6 +267,7 @@ async def init_neo4j_driver():
         await connector._ensure_constraints()
     except Exception as e:
         logger.critical(f"Critical failure during Neo4j initialization: {e}", exc_info=True)
+
 
 async def close_neo4j_driver():
     connector = await get_neo4j_connector()

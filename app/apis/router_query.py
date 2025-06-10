@@ -5,13 +5,11 @@ from app.models.query_models import QueryRequest, QueryResponse
 
 # Initialize logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 # Create an APIRouter instance for query-related endpoints
 router = APIRouter(
     prefix="/query",
     tags=["Querying"],
-    responses={404: {"description": "Not found"}},
 )
 
 @router.post(
@@ -19,14 +17,13 @@ router = APIRouter(
     response_model=QueryResponse,
     summary="Process a user's natural language query against the knowledge base.",
     description=(
-            "Accepts a user query, processes it through the new RAG pipeline "
-            "(semantic chunk retrieval, graph augmentation, LLM response generation), "
-            "and returns a structured response including the answer, source text chunks, "
-            "and an explorable subgraph."
+            "Accepts a user query and an optional list of filenames to filter by. "
+            "The query is processed through the RAG pipeline (caching, semantic chunk retrieval, "
+            "graph augmentation, LLM response generation) and returns a structured response."
     )
 )
 async def handle_user_query(
-        query_request: QueryRequest = Body(..., description="The user's query.")
+        query_request: QueryRequest = Body(..., description="The user's query and optional filters.")
 ):
     """
     Endpoint to process a user query and return a RAG-based answer.
@@ -37,23 +34,21 @@ async def handle_user_query(
             detail="Query cannot be empty."
         )
 
-    logger.info(f"Received query request: '{query_request.query}'")
+    logger.info(
+        f"Received query request: '{query_request.query}' with filters: {query_request.filter_filenames}"
+    )
 
     try:
-        # Call the refactored query service to process the query
+        # The query_request object, now containing optional filters,
+        # is passed directly to the service.
         query_response: QueryResponse = await process_user_query(query_request)
-        logger.info(f"Successfully processed query. LLM Answer (snippet): '{query_response.llm_answer[:100]}...'")
+
+        logger.info(f"Successfully processed query. Returning response.")
         return query_response
 
     except Exception as e:
         logger.error(f"Unexpected error processing query '{query_request.query}': {e}", exc_info=True)
-        # For unhandled server errors, a 500 is most appropriate.
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An unexpected server error occurred: {str(e)}"
         )
-
-if __name__ == "__main__":
-    # The __main__ block for ad-hoc testing remains conceptually the same,
-    # but would now test the new chunk-based workflow.
-    print("Query router defined. Run with a FastAPI application (e.g., app/main.py) to test endpoints.")

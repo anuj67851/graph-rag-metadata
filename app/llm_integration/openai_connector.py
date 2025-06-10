@@ -140,3 +140,40 @@ async def get_text_embedding(text: str, model_name: Optional[str] = None) -> Opt
         logger.error(f"An unexpected error during embedding generation with model {active_model_name}: {e}")
         # Don't re-raise here, just return None as per function signature
         return None
+
+async def generate_expanded_queries_from_context(original_query: str, context_chunks: str) -> List[str]:
+    """Uses LLM to generate multiple new queries based on the original query and context."""
+    system_message = settings.PROMPTS.get_system_message("json_expert")
+    user_prompt_template = settings.PROMPTS.get_user_prompt("generate_expanded_queries")
+
+    if not user_prompt_template:
+        logger.error("generate_expanded_queries prompt not found.")
+        return [original_query]
+
+    formatted_user_prompt = user_prompt_template.format(
+        original_query=original_query,
+        context_chunks=context_chunks,
+        num_expansions=settings.RETRIEVAL_PIPELINE['query_expansion']['num_expansions']
+    )
+
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": formatted_user_prompt}
+    ]
+
+    try:
+        model_name = settings.RETRIEVAL_PIPELINE['query_expansion']['llm_model_name']
+        response_content = await _call_openai_api(model_name, messages, is_json_mode=True)
+
+        if response_content:
+            data = json.loads(response_content)
+            expanded_queries = data.get("expanded_queries", [])
+            if expanded_queries:
+                logger.info(f"Generated {len(expanded_queries)} expanded queries.")
+                return expanded_queries
+    except Exception as e:
+        logger.error(f"Error during query expansion LLM call: {e}", exc_info=True)
+
+    # Fallback to original query if expansion fails
+    logger.warning("Query expansion failed or returned no queries. Falling back to original query.")
+    return [original_query]

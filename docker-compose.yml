@@ -26,29 +26,27 @@ services:
       - "50051:50051"
     volumes:
       - weaviate_data:/var/lib/weaviate
+    restart: on-failure
     environment:
       # We specify the text2vec-transformers module to run Hugging Face models
       ENABLE_MODULES: 'text2vec-transformers'
-      # Configuration for the transformer module
+      # Tell Weaviate where to find the model inference container
       TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
-      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
       # Standard Weaviate settings
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       CLUSTER_HOSTNAME: 'node1'
-    depends_on:
-      - t2v-transformers # Weaviate waits for the model container to be ready
-    restart: on-failure
 
   # Hugging Face Model Container (managed by Weaviate)
   t2v-transformers:
     image: cr.weaviate.io/semitechnologies/t2v-transformers:sentence-transformers-multi-qa-mpnet-base-cos-v1
     container_name: transformers-container
     environment:
-      ENABLE_CUDA: '0' # Set to 1 if you have a GPU and CUDA drivers
-      # You can add more model-specific settings here if needed
-    restart: on-failure
+      # This tells the container to download and cache a different model if needed.
+      # This allows flexibility, but for production it's best to build a custom image.
+      SENTENCE_TRANSFORMERS_MODEL: ${EMBEDDING_MODEL_REPO:-sentence-transformers/multi-qa-mpnet-base-cos-v1}
+      ENABLE_CUDA: '0' # Set to '1' if you have a configured GPU
 
   # Neo4j Graph Database
   neo4j:
