@@ -1,4 +1,10 @@
 import streamlit as st
+
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from streamlit_ui.helpers import api_request, display_pyvis_graph
 
 st.set_page_config(page_title="Chat", layout="wide")

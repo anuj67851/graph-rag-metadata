@@ -1,7 +1,13 @@
 import streamlit as st
 import pandas as pd
-from streamlit_ui.helpers import api_request
 from io import BytesIO
+
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from streamlit_ui.helpers import api_request
 
 st.set_page_config(page_title="File Management", layout="wide")
 st.title("📄 File Management")
