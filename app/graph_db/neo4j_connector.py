@@ -44,7 +44,7 @@ class Neo4jConnector:
     async def _get_driver(self) -> AsyncDriver:
         if self._driver is None:
             await self.initialize_driver()
-        if self._driver is None: # Check again after trying to initialize
+        if self._driver is None:
             raise ServiceUnavailable("Neo4j driver is not available and initialization failed.")
         return self._driver
 
@@ -85,16 +85,12 @@ class Neo4jConnector:
                 return records_list
         except Exception as e:
             logger.error(f"Error during Cypher query execution: {e}\nQuery: {query}\nParams: {parameters}", exc_info=True)
-            return [] # Return empty list on failure
+            return []
 
     async def merge_entity(self, entity_type: str, canonical_name: str, properties: Dict[str, Any]) -> bool:
         """Merges a node into the graph, creating or updating it."""
         props = {"canonical_name": canonical_name, **properties}
-        query = f"""
-        MERGE (n:{entity_type} {{canonical_name: $canonical_name}})
-        ON CREATE SET n = $props
-        ON MATCH SET n += $props
-        """
+        query = f"MERGE (n:{entity_type} {{canonical_name: $canonical_name}}) ON CREATE SET n = $props ON MATCH SET n += $props"
         try:
             await self.execute_query(query, {"canonical_name": canonical_name, "props": props})
             logger.info(f"Merged entity: {entity_type} - {canonical_name}")
@@ -105,12 +101,7 @@ class Neo4jConnector:
 
     async def merge_relationship(self, s_type: str, s_name: str, t_type: str, t_name: str, r_type: str, props: Dict[str, Any]) -> bool:
         """Merges a relationship between two nodes."""
-        query = f"""
-        MATCH (s:{s_type} {{canonical_name: $s_name}}), (t:{t_type} {{canonical_name: $t_name}})
-        MERGE (s)-[r:{r_type}]->(t)
-        ON CREATE SET r = $props
-        ON MATCH SET r += $props
-        """
+        query = f"MATCH (s:{s_type} {{canonical_name: $s_name}}), (t:{t_type} {{canonical_name: $t_name}}) MERGE (s)-[r:{r_type}]->(t) ON CREATE SET r = $props ON MATCH SET r += $props"
         params = {"s_name": s_name, "t_name": t_name, "props": props}
         try:
             await self.execute_query(query, params)
@@ -120,12 +111,10 @@ class Neo4jConnector:
             logger.error(f"Failed to merge relationship ({s_name})-[{r_type}]->({t_name}): {e}")
             return False
 
-    def _convert_neo4j_node_to_pydantic(self, node: Neo4jNodeObject) -> PydanticNode:
+    def _convert_neo4j_node_to_pydantic(self, props: dict) -> PydanticNode:
         """Converts a Neo4j Node object to a Pydantic Node model."""
-        props = dict(node)
-        # Prioritize defined schema types, fallback to first label.
         primary_type = "Unknown"
-        node_labels = list(node.labels)
+        node_labels = list(props['original_mentions'])
         for label in node_labels:
             if label in settings.SCHEMA.ENTITY_TYPES:
                 primary_type = label
@@ -133,70 +122,87 @@ class Neo4jConnector:
         if primary_type == "Unknown" and node_labels:
             primary_type = node_labels[0]
 
-        node_id = props.get("canonical_name", str(node.element_id))
+        node_id = props.get("canonical_name", "No Id Found")
+        return PydanticNode(id=node_id, label=props.get("canonical_name", node_id), type=primary_type, properties=props)
 
-        return PydanticNode(
-            id=node_id,
-            label=props.get("canonical_name", node_id),
-            type=primary_type,
-            properties=props
-        )
-
-    def _convert_neo4j_relationship_to_pydantic(self, rel: Neo4jRelationshipObject, nodes_map: Dict[str, PydanticNode]) -> Optional[PydanticEdge]:
+    def _convert_neo4j_relationship_to_pydantic(self, rel: tuple, nodes_map: Dict[str, PydanticNode]) -> Optional[PydanticEdge]:
         """Converts a Neo4j Relationship object to a Pydantic Edge model."""
-        source_id = str(rel.start_node.element_id)
-        target_id = str(rel.end_node.element_id)
+        source_id_by_element = str(rel[0]['canonical_name'])
+        target_id_by_element = str(rel[2]['canonical_name'])
 
-        # We need the canonical_name of the start and end nodes for the Edge model.
-        # We find them in the nodes_map we built from all nodes in the subgraph.
-        source_node_model = nodes_map.get(source_id)
-        target_node_model = nodes_map.get(target_id)
+        source_node_model = nodes_map.get(source_id_by_element)
+        target_node_model = nodes_map.get(target_id_by_element)
 
         if not source_node_model or not target_node_model:
-            logger.warning(f"Could not find start/end node in map for relationship {rel.type}. Skipping edge.")
+            logger.warning(f"Could not find start/end node in map for relationship {rel[1]}. Skipping edge.")
             return None
 
-        return PydanticEdge(
-            source=source_node_model.id, # Use canonical_name from the Pydantic model
-            target=target_node_model.id, # Use canonical_name from the Pydantic model
-            label=rel.type,
-            properties=dict(rel)
-        )
+        return PydanticEdge(source=source_node_model.id, target=target_node_model.id, label=rel[1], properties=dict())
 
     def _process_subgraph_results(self, records: List[Dict[str, Any]]) -> Subgraph:
-        """Processes raw query results (nodes and relationships) into a Subgraph object."""
-        pydantic_nodes_map: Dict[str, PydanticNode] = {} # Key: element_id
+        """
+        Processes raw query results into a Subgraph object.
+        This is now robust enough to handle records containing lists of graph objects.
+        """
+        pydantic_nodes_map: Dict[str, PydanticNode] = {}  # Key: element_id
+        pydantic_edges: List[PydanticEdge] = []
+
+        all_items_to_process = []
+        for record in records:
+            for value in record.values():
+                if isinstance(value, list):
+                    all_items_to_process.extend(value)
+                else:
+                    all_items_to_process.append(value)
+
+        # First pass: collect all unique nodes
+        for item in all_items_to_process:
+            if isinstance(item, dict):
+                node_element_id = str(item['canonical_name'])
+                if node_element_id not in pydantic_nodes_map:
+                    pydantic_nodes_map[node_element_id] = self._convert_neo4j_node_to_pydantic(item)
+
+        # Second pass: collect all relationships
+        for item in all_items_to_process:
+            if isinstance(item, tuple):
+                edge = self._convert_neo4j_relationship_to_pydantic(item, pydantic_nodes_map)
+                if edge:
+                    pydantic_edges.append(edge)
+
+        unique_edges = list({(e.source, e.target, e.label): e for e in pydantic_edges}.values())
+        return Subgraph(nodes=list(pydantic_nodes_map.values()), edges=unique_edges)
+
+    def _process_subgraph_results_full_graph_sample(self, records: List[Dict[str, Any]]) -> Subgraph:
+        """
+        Processes raw query results into a Subgraph object.
+        This is now robust enough to handle records containing lists of graph objects.
+        """
+        pydantic_nodes_map: Dict[str, PydanticNode] = {}  # Key: element_id
         pydantic_edges: List[PydanticEdge] = []
 
         # First pass: collect all unique nodes
-        for record in records:
-            # A record can contain a node, a relationship, or both.
-            for value in record.values():
-                if isinstance(value, Neo4jNodeObject):
-                    node_element_id = str(value.element_id)
-                    if node_element_id not in pydantic_nodes_map:
-                        pydantic_nodes_map[node_element_id] = self._convert_neo4j_node_to_pydantic(value)
+        for item in records:
+            if isinstance(item, dict):
+                node_element_id = str(item['canonical_name'])
+                if node_element_id not in pydantic_nodes_map:
+                    pydantic_nodes_map[node_element_id] = self._convert_neo4j_node_to_pydantic(item)
 
-        # Second pass: collect all relationships, using the node map for source/target info
-        for record in records:
-            for value in record.values():
-                if isinstance(value, Neo4jRelationshipObject):
-                    edge = self._convert_neo4j_relationship_to_pydantic(value, pydantic_nodes_map)
-                    if edge:
-                        pydantic_edges.append(edge)
+        # Second pass: collect all relationships
+        for item in records:
+            if isinstance(item, tuple):
+                edge = self._convert_neo4j_relationship_to_pydantic(item, pydantic_nodes_map)
+                if edge:
+                    pydantic_edges.append(edge)
 
-        # Remove duplicate edges (can happen in path queries)
         unique_edges = list({(e.source, e.target, e.label): e for e in pydantic_edges}.values())
-
         return Subgraph(nodes=list(pydantic_nodes_map.values()), edges=unique_edges)
+
 
     async def get_subgraph_for_entities(self, canonical_names: List[str], hop_depth: int = 1) -> Subgraph:
         """Retrieves an N-hop subgraph for a list of seed entities."""
         if not canonical_names:
             return Subgraph()
 
-        # This query finds the seed nodes, traverses N-hops, and returns all nodes and relationships found.
-        # It's robust and avoids complex UNIONs.
         query = f"""
         MATCH (seed) WHERE seed.canonical_name IN $names
         CALL {{
@@ -211,90 +217,31 @@ class Neo4jConnector:
         params = {"names": canonical_names}
         results = await self.execute_query(query, params)
 
-        # The result will be one record per seed node, with lists of nodes/rels.
-        # We need to flatten and combine them.
-        all_nodes = []
-        all_rels = []
-        for record in results:
-            all_nodes.extend(record.get('nodes', []))
-            all_rels.extend(record.get('rels', []))
+        if not results:
+            return Subgraph()
 
-        # Re-package for the standard processor
-        final_records = [{"nodes": all_nodes, "rels": all_rels}]
-        return self._process_subgraph_results(final_records)
-
-    async def find_shortest_paths(self, start_node_name: str, end_node_name: str, max_hops: int = 3) -> Subgraph:
-        """Finds all shortest paths between two entities and returns the combined subgraph."""
-        query = f"""
-        MATCH (start {{canonical_name: $start_name}}), (end {{canonical_name: $end_name}})
-        MATCH path = allShortestPaths((start)-[*1..{max_hops}]-(end))
-        WITH nodes(path) as path_nodes, relationships(path) as path_rels
-        UNWIND path_nodes as n
-        UNWIND path_rels as r
-        RETURN collect(DISTINCT n) as nodes, collect(DISTINCT r) as rels
-        """
-        params = {"start_name": start_node_name, "end_name": end_node_name}
-        results = await self.execute_query(query, params)
+        # The results list contains records like [{'nodes': [...], 'rels': [...]}]
+        # The corrected _process_subgraph_results can now handle this directly.
         return self._process_subgraph_results(results)
 
-
-# Global instance management
+# --- Singleton Management ---
 neo4j_connector_instance: Optional[Neo4jConnector] = None
 
 async def get_neo4j_connector() -> Neo4jConnector:
-    """Provides the singleton Neo4jConnector instance."""
     global neo4j_connector_instance
     if neo4j_connector_instance is None:
         neo4j_connector_instance = Neo4jConnector()
     return neo4j_connector_instance
 
 async def init_neo4j_driver():
-    """Initializes the driver and ensures constraints on startup."""
     try:
         connector = await get_neo4j_connector()
         await connector.initialize_driver()
         await connector._ensure_constraints()
     except Exception as e:
         logger.critical(f"Critical failure during Neo4j initialization: {e}", exc_info=True)
-        # In a real app, you might want this to prevent startup.
 
 async def close_neo4j_driver():
-    """Closes the driver on shutdown."""
     connector = await get_neo4j_connector()
     if connector:
         await connector.close_driver()
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def test_neo4j_connector():
-        print("--- Testing Neo4j Connector (Refined) ---")
-        connector = await get_neo4j_connector()
-
-        # Test data
-        await connector.merge_entity("PERSON", "Alice", {"role": "Engineer"})
-        await connector.merge_entity("ORGANIZATION", "ACME Corp", {"industry": "Software"})
-        await connector.merge_relationship("PERSON", "Alice", "ORGANIZATION", "ACME Corp", "WORKS_FOR", {"year": 2024})
-
-        print("\n1. Testing Get Subgraph for 'Alice'...")
-        subgraph = await connector.get_subgraph_for_entities(["Alice"], hop_depth=1)
-        if subgraph and not subgraph.is_empty():
-            print(f"   Subgraph Nodes: {[node.id for node in subgraph.nodes]}")
-            print(f"   Subgraph Edges Count: {len(subgraph.edges)}")
-            for edge in subgraph.edges:
-                print(f"     Edge: ({edge.source})-[:{edge.label}]->({edge.target})")
-        else:
-            print("   Subgraph for 'Alice' is empty or retrieval failed.")
-
-        # Clean up test data
-        await connector.execute_query("MATCH (n {canonical_name: 'Alice'}) DETACH DELETE n")
-        await connector.execute_query("MATCH (n {canonical_name: 'ACME Corp'}) DETACH DELETE n")
-        print("\nCleaned up test data.")
-
-        await connector.close_driver()
-        print("\n--- Neo4j Connector Test Finished ---")
-
-    if settings.NEO4J_URI:
-        asyncio.run(test_neo4j_connector())
-    else:
-        print("Skipping Neo4j connector tests: NEO4J_URI not set.")

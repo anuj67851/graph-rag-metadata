@@ -39,7 +39,7 @@ async def get_full_graph_sample(node_limit: int, edge_limit: int) -> Subgraph:
     record = results[0]
     nodes_and_rels_records = record.get('nodes', []) + record.get('rels', [])
 
-    return neo4j_conn._process_subgraph_results(nodes_and_rels_records)
+    return neo4j_conn._process_subgraph_results_full_graph_sample(nodes_and_rels_records)
 
 
 async def get_top_n_busiest_nodes(top_n: int = 10) -> Subgraph:
@@ -52,10 +52,11 @@ async def get_top_n_busiest_nodes(top_n: int = 10) -> Subgraph:
     query_busiest_nodes = """
     MATCH (n)
     WHERE n.canonical_name IS NOT NULL
-    WITH n, size((n)--()) as degree
+    RETURN
+      n.canonical_name   AS canonical_name,
+      COUNT{(n)-[]-()}          AS degree
     ORDER BY degree DESC
-    LIMIT $top_n
-    RETURN n.canonical_name AS canonical_name
+    LIMIT toInteger($top_n)
     """
     params_busiest = {"top_n": top_n}
     busiest_nodes_results = await neo4j_conn.execute_query(query_busiest_nodes, params_busiest)
