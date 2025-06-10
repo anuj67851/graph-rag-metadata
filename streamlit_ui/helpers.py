@@ -53,10 +53,41 @@ def display_pyvis_graph(graph_data: dict, graph_id: str) -> None:
     for edge_info in graph_data.get("edges", []):
         net.add_edge(edge_info["source"], edge_info["target"], label=edge_info.get("label", ""), title=f"Type: {edge_info.get('label', '')}")
 
-    net.set_options("""
-    { "physics": { "solver": "barnesHut", "barnesHut": { "gravitationalConstant": -3000 } },
-      "interaction": { "hover": true, "dragNodes": true, "dragView": true, "zoomView": true } }
-    """)
+    options_json = """
+    {
+      "physics": {
+        "solver": "barnesHut",
+        "barnesHut": {
+          "gravitationalConstant": -8000,
+          "centralGravity": 0.5,
+          "springLength": 75, 
+          "springConstant": 0.01,
+          "damping": 0.09,
+          "avoidOverlap": 0.1
+        },
+        "minVelocity": 0.75,
+        "stabilization": { "iterations": 150 }
+      },
+      "interaction": {
+        "hover": true,
+        "dragNodes": true,
+        "dragView": true,
+        "zoomView": true
+      },
+      "nodes": {
+        "font": { "size": 12 }
+      },
+      "edges": {
+        "font": {
+          "size": 10,
+          "align": "middle"
+        },
+        "arrows": { "to": { "enabled": true, "scaleFactor": 0.7 } },
+        "smooth": { "type": "continuous" }
+      }
+    }
+    """
+    net.set_options(options_json)
 
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".html", prefix=f"{graph_id}_") as tmp:

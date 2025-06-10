@@ -80,7 +80,15 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     final_chunks_for_context = candidate_chunks
     if reranking_config.get('enabled'):
         reranker: ReRanker = get_reranker()
-        final_chunks_for_context = reranker.rerank_chunks(user_query, candidate_chunks)
+        # Add a check to ensure the reranker object was created successfully
+        if reranker:
+            final_chunks_for_context = reranker.rerank_chunks(user_query, candidate_chunks)
+        else:
+            # If the reranker failed to initialize for some reason, log it and proceed without re-ranking.
+            logger.warning("Re-ranking is enabled in config, but the reranker object could not be initialized. Skipping re-ranking step.")
+            # We must still manually trim the chunks to the final_top_n size
+            final_top_n = reranking_config.get('final_top_n', 3)
+            final_chunks_for_context = candidate_chunks[:final_top_n]
 
     # --- Final Context Assembly and Answer Generation ---
     if not final_chunks_for_context:
