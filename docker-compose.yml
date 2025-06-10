@@ -1,26 +1,80 @@
+version: '3.11'
+
 services:
-  weaviate:
-    command:
-      - --host
-      - 0.0.0.0
-      - --port
-      - '8080'
-      - --scheme
-      - http
-    image: cr.weaviate.io/semitechnologies/weaviate:1.31.0
+  # The main Python FastAPI application
+  rag-api:
+    build: .
+    container_name: rag-api-container
     ports:
-      - 8080:8080
-      - 50051:50051
+      - "8000:8000"
+    volumes:
+      - .:/app  # Mounts the current directory into the container for live code changes
+    env_file:
+      - .env
+    depends_on:
+      - weaviate
+      - neo4j
+      - redis
+    restart: on-failure
+
+  # Weaviate Vector Database
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.1
+    container_name: weaviate-container
+    ports:
+      - "8080:8080"
+      - "50051:50051"
     volumes:
       - weaviate_data:/var/lib/weaviate
-    restart: on-failure:0
     environment:
+      # We specify the text2vec-transformers module to run Hugging Face models
+      ENABLE_MODULES: 'text2vec-transformers'
+      # Configuration for the transformer module
+      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
+      # Standard Weaviate settings
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      ENABLE_API_BASED_MODULES: 'true'
-      ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
       CLUSTER_HOSTNAME: 'node1'
+    depends_on:
+      - t2v-transformers # Weaviate waits for the model container to be ready
+    restart: on-failure
+
+  # Hugging Face Model Container (managed by Weaviate)
+  t2v-transformers:
+    image: cr.weaviate.io/semitechnologies/t2v-transformers:sentence-transformers-multi-qa-mpnet-base-cos-v1
+    container_name: transformers-container
+    environment:
+      ENABLE_CUDA: '0' # Set to 1 if you have a GPU and CUDA drivers
+      # You can add more model-specific settings here if needed
+    restart: on-failure
+
+  # Neo4j Graph Database
+  neo4j:
+    image: neo4j:5.18.0
+    container_name: neo4j-container
+    ports:
+      - "7474:7474" # Neo4j Browser
+      - "7687:7687" # Bolt port for driver connection
+    volumes:
+      - neo4j_data:/data
+    environment:
+      # Use environment variables from the .env file
+      NEO4J_AUTH: ${NEO4J_USERNAME}/${NEO4J_PASSWORD}
+    restart: on-failure
+
+  # Redis Caching Service
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: on-failure
+
 volumes:
   weaviate_data:
-
+  neo4j_data:
+  redis_data:
