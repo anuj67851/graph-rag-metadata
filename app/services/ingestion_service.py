@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Any, Tuple
 
 from langchain_experimental.text_splitter import SemanticChunker
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
 from app.core.config import settings
@@ -42,7 +43,10 @@ async def process_document_for_ingestion(filename: str, filepath: str) -> Ingest
             sqlite_conn.update_file_status(filename, "Failed", error_message=message)
             return IngestionStatus(filename=filename, status="Failed", message=message)
 
-        embeddings_model = OpenAIEmbeddings(model=settings.LLM_EMBEDDING_MODEL_NAME)
+        embeddings_model = HuggingFaceEmbeddings(
+            model_name=settings.EMBEDDING_MODEL_REPO,
+            model_kwargs={'device': 'cpu'} # Explicitly use CPU to avoid GPU memory issues in the API container
+        )
         text_splitter = SemanticChunker(embeddings_model, breakpoint_threshold_type="percentile")
         text_chunks = text_splitter.split_text(raw_text)
 

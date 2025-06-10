@@ -1,6 +1,7 @@
 import logging
 from typing import List
 from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_core.documents import Document
 
 from app.core.config import settings
@@ -13,13 +14,18 @@ class ReRanker:
     A modular component for re-ranking retrieved documents using a cross-encoder model.
     """
     def __init__(self):
-        reranking_config = settings.RETRIEVAL_PIPELINE['reranking']
-        model_repo = reranking_config['model_repo']
+        reranking_config = settings.RETRIEVAL_PIPELINE.get('reranking', {})
+        model_repo = reranking_config.get('model_repo', 'cross-encoder/ms-marco-MiniLM-L-6-v2')
+        final_top_n = reranking_config.get('final_top_n', 3)
 
-        self.reranker = CrossEncoderReranker(
-            model=model_repo,
-            top_n=reranking_config['final_top_n']
+        # 1. Create an instance of the actual cross-encoder model from Hugging Face.
+        encoder_model = HuggingFaceCrossEncoder(
+            model_name=model_repo,
+            model_kwargs={'device': 'cpu'} # Ensure it runs on CPU
         )
+        # 2. Pass the instantiated model OBJECT to the CrossEncoderReranker.
+        self.reranker = CrossEncoderReranker(model=encoder_model, top_n=final_top_n)
+
         logger.info(f"ReRanker initialized with model: {model_repo}")
 
     def rerank_chunks(self, query: str, chunks: List[SourceChunk]) -> List[SourceChunk]:

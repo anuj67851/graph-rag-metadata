@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import logging
 from datetime import datetime
@@ -18,6 +19,11 @@ class SQLiteConnector:
         """Establishes and returns the SQLite database connection."""
         if self._connection is None:
             try:
+                # 1. Get the directory path from the full database file path.
+                db_dir = os.path.dirname(settings.SQLITE_DB_PATH)
+                # 2. Create the directory if it doesn't already exist.
+                os.makedirs(db_dir, exist_ok=True)
+
                 self._connection = sqlite3.connect(settings.SQLITE_DB_PATH, check_same_thread=False)
                 self._connection.row_factory = sqlite3.Row # Allows accessing columns by name
                 logger.info(f"SQLite connection established to '{settings.SQLITE_DB_PATH}'.")
