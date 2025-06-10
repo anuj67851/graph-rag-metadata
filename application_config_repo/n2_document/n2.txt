@@ -1,0 +1,878 @@
+
+
+ 
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+  
+Contents
+
+Introduction	2
+About SoluSoft	2
+Overview	3
+N2 User Interface	4
+Configurations	6
+Document Capture	9
+Capture Overview	9
+Import Wizard	10
+Import XML Rules and Companion Files	11
+XML Companion File	13
+N2 Profile – Templates and Attributes	14
+Profile Overview	14
+Attributes	14
+Folder and Document Templates	16
+Word Document Templates	19
+Version Control and Revision History	22
+Version Control	22
+Revision History	22
+Attribute History	22
+Document Version History	23
+Document Storage	25
+Add Single Folders to the Repository	28
+Search, Retrieval, and Viewing	29
+Document Viewing	30
+History	32
+Workflow	33
+Defining Workflow	33
+Workflow Features	33
+Administration and Security	39
+Security Overview	39
+Access Control Lists	39
+System ACL	39
+Roles	41
+Administrative User Logon	42
+Event Handlers	43
+Integration	45
+N2 Technical Specifications	46
+
+
+
+
+Trademark Notices
+
+N2 and Nirvana are trademarks of SoluSoft Technologies Pvt. Ltd.
+
+Microsoft SQL Server, Windows 2000, Windows logo, Windows Server 2003, is either registered trademarks or trademarks of Microsoft Corporation in the United States and/or other countries.
+
+All other third-party products mentioned in this document are trademarks of their respective companies.
+
+ 
+Introduction
+
+This document provides an overview of N2 Workflow and Document Content Management system (WDCM) for business and government organizations. Workflow and Document Content Management systems help organizations better manage the creation, revision, organization, and security access of electronic documents.  N2 enables you to improve the accessibility, usability, security, approval, route and control over your paper and electronic documents.
+
+N2 is a revolutionary WDCM system built entirely around the latest standards and technology.  It is a powerful system that leverages the latest standard software to provide the highest functionality at the lowest ongoing cost of acquisition and operation.  N2 is designed to operate simply on a single server with client access through Windows Internet Explorer.  There is very little to install or configure on the client workstations, and documents can be accessed through the Universal Viewer without having the original document software on any workstations.  Yet unlike conventional web-based applications, access is fast and the interface is rich and robust.
+
+N2 can be used to support any document-intensive business process, including Pharmaceutical Clinical Trail and Drug Development, Financial, Accounts Payable, Client Records, Legal and Contracts, Regulatory, Credit Cards, Claims, New Business, Customer Acquisition, Human Resources, Unemployment Benefits, Life Insurance, Property Insurance, Manufacturing Control, Maintenance Records, and many others.  Pre-built templates are available for many applications, and can be customized by business end-users.
+
+About SoluSoft
+
+SoluSoft Inc, the parent company of SoluSoft Technologies Pvt. Ltd. is a leading software and services company providing Workflow and Document Content and Business Process software to businesses and government customers. SoluSoft was established in 1997 and supports a variety of Global 2000 customers, worldwide for over 10 years.  N2 support and services are available through your Distributor throughout North America and world-wide.
+
+ 
+Overview
+
+N2 is a Workflow and Document Content Management system that enables organizations to manage the creation, revision, approval, and consumption of electronic documents.  It provides the following major features:
+
+•	Capture – Documents are captured by batch scan systems and automatically entered into the system in batch mode or by a user in single-document mode. During capture text indexing is completed by N2 text indexing service
+•	Profile – Documents are indexed using configurable templates and organized into folders as appropriate
+•	Revise –Document revisions are controlled and annotations are stored separately
+•	Version control – Multiple versions of documents and history of versions are tracked
+•	Storage – Documents are stored in magnetic file system repositories or MSSQL/Oracle repository. The file system repository can utilize NAS or SAN storage sub system. 
+•	Search – Folder or document attributes are utilized to search documents and folders
+•	Text Search – Powerful document content text search is utilized to instantly find documents 
+•	View – Rich multi-file format viewer
+•	Security
+o	Authentication is provided using internal user id and password or with external authentication using LDAP.
+o	Authorization is role-based security and control over access and modifications to documents and folders
+•	Integration – Interface to external systems linking documents to business processes
+•	Utilities – Administration, email, fax, print, import and export documents
+
+N2 provides a single repository of current and archived documents for the entire company that everyone can access under security and control.  Documents can be captured in batch mode from external document scanning subsystems or imported into the system from your business processes using N2 import wizards.  Individual documents can also easily be added to the system by office users or creator of the documents.  N2 provides complete profiling and indexing capabilities, including the ability to assign unlimited field attributes to document and folder templates and to organize documents into folders.
+
+N2 provides the user with the ability to search for documents and folders, view and revise the documents under version control, store and manage them.  Documents and folders can be searched for using any combination of field attributes set up in document templates. 
+
+Document revision requires that documents be checked out of the repository, revised, and checked back into the repository.  Complete revision history is tracked so that when a document is created, modified, or deleted, the user id, date and time of the revision is maintained.
+
+Security is provided using internal authentication or through external authentication using LDAP. Authorization is maintained over all documents and folders through a powerful role-based security model that maps Access Control Lists to roles and templates.  Complete control is provided for rights to read, write, modify, delete, and manage documents and folders.
+
+
+N2 features a revolutionary Universal Document Viewer, a patented system for the progressive rendering of image formats as well as Microsoft Word, Excel, PowerPoint, Project, Visio, Adobe PDF, TIFF, GIF, JPEG, TXT, HTML, CAD files, and many more.  N2 allows users of the system to view all documents through a Web browser without having to install any document-specific software locally on their workstations.
+
+•	High-speed image and thumbnail display of all document types
+•	Scale-to-gray and other display enhancements 
+•	Extensive document annotation capabilities
+•	Image adjustment capabilities (zoom, rotate, fit, etc.) 
+•	Image transformation (rotate, horizontal/vertical flipping) 
+•	Local save, print and email capabilities
+•	Detachable document viewer window, detachable thumbnail window
+•	Local image saving to either TIFF or the original format 
+•	Thumbnail browsing of documents and images
+•	Advanced image navigation, through browser-like history list 
+•	Annotation editing support with full layer (256 layers) and security control
+•	Hyperlinking within document pages and between multiple documents
+
+N2 User Interface
+Once an N2 User logs into the system, security enables them to search for any document for which they have been granted access.  A list of the selected documents is displayed.
+
+
+ 
+
+
+
+Clicking the Icon for the Document will display the document, field attributes and the page thumbnails in a separate window.  See below for an example:
+
+ 
+ 
+Configurations
+
+The N2 Server features:
+•	Microsoft Windows 2003, Advanced Server, and Storage Server support
+•	Document rendering at the central server
+•	Multiple database support
+•	Multi-processor server support
+•	Web-based system administration
+•	Authentication with Windows 2000/2003 security
+•	Powerful ACL security authorization
+
+N2 can be configured for use with as few as 1-3 users, or can grow to 100 or 1000 users.  The following diagrams show the simplest configuration with both the server and the client running on the same machine to network and enterprise configurations.
+
+ 
+
+ 
+ 
+  
+Document Capture
+
+Capture Overview
+
+Document Capture refers to the capability of N2 to get documents into the system.  N2 can capture documents from scanners, normal office document creation, email, fax, and many other creation methods.  Some additional N2 Document Capture methods include:
+
+	Batch Scan using bar codes and document separators to create TIF files and index files that are automatically imported into N2.
+	Receive inbound fax documents through leading fax gateways including RightFax.
+	Import office documents including Word and Excel, Visio, CAD and PDF files using the import utility or by adding single documents using the N2 client.
+	Import office documents or scanned files from a remote office that is using N2.
+
+N2 provides an automated Import utility to capture all types of electronic documents using either XML descriptors or by using simple text files.  When the documents are captured, they are stored in the N2 repository, and automatically profiled using Folders, Documents, and Attributes.
+
+N2 provides the interface to leading batch scanning products that handle the capture and classification of paper documents.  Scanned paper documents are stored as standard TIF or PDF files in the system.
+
+N2 also provides ad hoc scanning capabilities to support low volume capture of paper documents at the desktop workstation using desktop scanners with a TWAIN interface.
+
+ 
+Import Wizard
+
+The N2 Import Service is a Windows Server Service Application that is installed on the N2 application server.  It is normally always running and monitoring the configured directory for input files.  It looks for Rules files and companion documents that are eligible for input into the system.
+
+N2 Import Rules files can be XML files or text files.  Use the Administrative Tools Import Wizard to configure the import rules file.
+
+ 
+
+
+
+ 
+Import XML Rules and Companion Files
+
+This section describes the XML rules file and companion files used to import documents and folders into the N2 system.  The XML rules file has the following tag elements and attributes:-
+Elements	Attributes	Description
+import	 	 			-	The start and end tag of the XML rules file.
+ 	input	name	The name of the input element.
+ 		path	The input path for import service to watch for folders and documents.
+ 		delay	The sleep time between watches.
+ 		rule	The rule name used to process.
+ 	rule	 	 	 	name	The rule name to identify the various rules.
+ 	 	folder	 	 	name	The template name of the folder required to import.
+ 	 	 	search	 	-	The search attributes required to search for existing folders.
+ 	 	 	 	attribute	name	The attribute name to search.
+ 	 	 	save	 	-	 
+ 	 	 	 	attribute	name	The attribute name to save.
+ 	 	 	 		required	True, if the attribute is required.
+ 	 	document	 	 	-	The template name of the document required to import.
+ 	 	 	save	 	-	 
+ 	 	 	 	attribute	name	The attribute name to save.
+ 	 	 	 		 required	True, if the attribute is required.
+A sample XML rules file looks as follows:-
+<import>
+  <input name="Employees" path="D:\Nirv2\import\data\employees" delay="60" rule="CreateEmployees" />
+  <input name="Expenses" path="D:\Nirv2\import\data\expenses" delay="60" rule="CreateExpenses" />
+  <input name="Resumes" path="D:\Nirv2\import\data\resumes" delay="60" rule="CreateResumes" />
+<rule name="CreateEmployees">
+<folder name="Employee">
+<!--   
+CREATE FOLDER
+Using this rule a folder will be search based on SSN.
+If found the folder values will be updated with the
+attributes specified in the save element else a new folder
+will be create will attributes specified in the save element.
+-->
+<search>
+  <attribute name="SSN" />
+  </search>
+<save>
+  <attribute name="FIRSTNAME" required="false" />
+  <attribute name="LASTNAME" required="false" />
+  <attribute name="MIDDLEINITIAL" required="false" />
+  <attribute name="SSN" required="false" />
+  <attribute name="TERMINATIONDATE" required="false" />
+  <attribute name="ACTIVE" required="false" />
+  <attribute name="HOURLYRATE" required="false" />
+  <attribute name="HIREDATE" required="false" />
+  </save>
+  </folder>
+  </rule>
+<rule name="CreateExpenses">
+<!--   
+CREATE FOLDER and DOCUMENT.  Put the DOCUMENT in the FOLDER.
+Using this rule a folder will be search based on SSN,
+if found the folder values will be updated with the
+attributes specified in the save element else a new folder
+will be create will attributes specified in the save element.
+The new document created will be save within this folder
+-->
+<folder name="Employee">
+<search>
+  <attribute name="SSN" />
+  </search>
+<save>
+  <attribute name="FIRSTNAME" required="false" />
+  <attribute name="LASTNAME" required="false" />
+  <attribute name="MIDDLEINITIAL" required="false" />
+  <attribute name="SSN" required="false" />
+  <attribute name="TERMINATIONDATE" required="false" />
+  <attribute name="ACTIVE" required="false" />
+  <attribute name="HOURLYRATE" required="false" />
+  <attribute name="HIREDATE" required="false" />
+  </save>
+  </folder>
+<document name="Expense">
+<save>
+  <attribute name="FIRSTNAME" required="false" />
+  <attribute name="LASTNAME" required="false" />
+  <attribute name="MIDDLEINITIAL" required="false" />
+  <attribute name="COSTCENTER" required="false" />
+  <attribute name="EXPENSEAMOUNT" required="false" />
+  <attribute name="EXPENSEDATE" required="false" />
+  <attribute name="REGION" required="false" />
+  <attribute name="EXPENSESTATUS" required="false" />
+  <attribute name="DOCUMENTTYPE" required="false" />
+  </save>
+  </document>
+  </rule>
+<rule name="CreateResumes">
+<!--   
+CREATE DOCUMENT.
+The new document created using the attributes specified in
+the save element.
+-->
+<document name="Resume">
+<save>
+  <attribute name="FIRSTNAME" required="false" />
+  <attribute name="LASTNAME" required="false" />
+  <attribute name="MIDDLEINITIAL" required="false" />
+  <attribute name="EDUCATION" required="false" />
+  <attribute name="SKILLSET" required="false" />
+  <attribute name="DOCUMENTTYPE" required="false" />
+  </save>
+  </document>
+  </rule>
+  </import>
+
+XML Companion File
+
+The companion file must be present in the same directory as the document object that is to be imported into the system.  The companion file normally has the same filename as the document, but has an XML extension.  A sample input XML companion file for the above rules is as follows:
+<import>
+<attribute name="FIRSTNAME" value="Kim" />
+<attribute name="LASTNAME" value="Wang" />
+<attribute name="MIDDLEINITIAL" value="L" />
+<attribute name="SSN" value="222-33-4444" />
+<attribute name="TERMINATIONDATE" value="1/1/2011" />
+<attribute name="ACTIVE" value="1" />
+<attribute name="HOURLYRATE" value="40" />
+<attribute name="HIREDATE" value="1/3/2001" />
+<attribute name="COSTCENTER" value="SS00032" />
+<attribute name="EXPENSEAMOUNT" value="34.22" />
+<attribute name="EXPENSEDATE" value="2/4/2004" />
+<attribute name="REGION" value="North" />
+<attribute name="EXPENSESTATUS" value="New" />
+<attribute name="DOCUMENTTYPE" value="SV Graphics" />
+</import>
+
+ 
+N2 Profile – Templates and Attributes
+
+Profile Overview
+
+An N2 Profile enables you to profile (describe and classify) a document using the following terms:
+
+	Folder Templates
+	Document Templates
+	Attributes
+
+Attributes are fields that are assigned to documents or folders.  Document templates define the different document types in the system, and folder templates define the folders that can be used to organize the documents.  Folders can contain both folders and documents.  This allows you to classify and organize your documents in ways that make sense to your business process.
+
+Folder Templates, Document Templates, and Attributes are defined by your system administrator and are available from the Administrative Tools menu.  Users must be granted the Manage ACL or the Owner Role in order to have access to this menu (See the Security section of this document for information on adding Users, Roles, and ACLs).
+
+Attributes
+
+An Attribute defines the indexing fields that will later be used to search for a document or folder.  These field values also are displayed whenever a document or folder is shown.  Attributes can hold various data types such as Integer (e.g. Claim Number), Numeric (Claim Amount), Text (Full Name), Boolean (Yes/No) and DateTime (Claim Date).  To view the list of existing attributes in the system, click on "Attributes" within the "Administrative Tools" menu.  The existing attributes can be added to templates for indexing.
+
+An attribute holds the following information:
+
+•	DataType - the type of attribute (Boolean, integer, numeric, text and date time). 
+•	Name - the name of the attribute (e.g. Name) 
+•	Label - the label of the attribute to be displayed. (e.g. Full Name) 
+•	Description - a brief description of the attribute. (e.g. Holds the full name of the employee) 
+•	Category - category to which the attribute belongs to (Employee, Claims, Payroll, General) 
+•	Length – the number of characters in the attribute (e.g. ZIP - 9, Phone - 12) 
+•	Value List - a fixed value list for attribute (e.g. Status - New;InProcess;Rejected;Approved).  A value list will allow a user of the system to press a drop-down listbox to select only those list items that are specified here.
+
+The attributes screen has the following features:
+
+•	Click on  to create a new attribute. 
+•	Click on  to modify an existing attribute. 
+•	Click on  to delete an existing attribute.  Note that only attributes that are not assigned to templates can be deleted from the system. 
+
+The following shows the adding of a New Attribute for Contact Amount:
+
+ 
+
+Press the Add Attribute button to complete.  You can add additional attributes, or press Cancel to quit.
+ 
+Folder and Document Templates
+
+A template is a prototype representation of a particular Folder or Document in the system.  It allows you to define what you would like to store in the system (in the form of Folders or Documents) and what the field attributes for the Folder or Document will be.  A template consists of the following information:
+
+	Template Type – Folder or Document
+	Template Name – A short name for the template
+	Template Description – A longer description of the template
+	Versions – A number that indicates how many different versions of any one instance of the template you want to allow to be stored.
+	Object Location – the repository location of the instances for this template.  If a document is created from this template, where will it be stored on your network?
+	ACL – The Access Control List that should apply to all instances for this template.  See the Security section of this document for more information.
+
+The following shows an example of a Template for a Contract Document:
+
+ 
+
+
+
+
+
+ 
+
+
+When you have defined both Templates and Attributes, you can add the Attributes to the Templates.  To add Attributes to the Template, press the + sign next to the Template:
+
+
+
+
+ 
+
+When you click the plus sign to expand the template tree you will see any attributes that have already been added.
+
+ 
+
+
+Attributes can be shared across templates, so that similar attributes do not have to be described for every different document type.  When you have added all attributes to a template they will be used to display a form that is used for searching, indexing, and editing content items.
+ 
+
+Word Document Templates
+ 
+Creating word document from word template and adding it in N2
+ 
+Start Application  Word Template Editor  Click   button, you get the following screen.
+ 
+ 
+ 
+ 
+Now you can design your template in the right pane. Then select appropriate N2 template from the dropdown in left pane and then you can add that template’s attributes from the field’s list into your word template by clicking   button next to field’s list. Make sure the cursor is at right position in the right pane while you add the field from field list.
+ 
+ 
+The Complete word template after adding fields would look like the below.
+ 
+ 
+ 
+ 
+Now you can click on the   button to save the word template at specific location that is set in the App.config file of the WordTemplateEditor.
+ 
+Now you can open the N2 web application.
+ 
+ 
+Administrative tools  Templates  expand the template to which you want to associate the word template you just created. Click on the  button. Below screen will pop up where you will give the path of the xml file (word template) created.
+ 
+ 
+ 
+Once you specified the word template path, you can create a document for the template by selecting the template and clicking   button.
+ 
+ 
+ 
+ 
+ 
+ 
+After filling all the attributes just click in the Create Document button and word document will be created from the template and will be added into N2 with all the attributes specified.
+ 
+Version Control and Revision History
+
+Version Control
+
+N2 can maintain a single version of a document or it can maintain multiple versions.  You may view a document without revising it or creating a new version.  If you want to modify a document, you must check it out using the Check Out button.  A checked-out document or folder can be viewed by other users of the system if necessary without being checked back in.  In order for the modification to be saved, it must be checked in and uploaded.  If you do not want to save modifications, you may check the document in without uploading it.
+
+When a document is checked in, a new version is created and a sequential version number is assigned to it.  When a document is created the version number is 1.  Subsequent check-ins will create version 2 and so forth.
+
+Once a document is checked out by one user it is locked to that user and cannot be checked out by another user until it is checked in by the original user or an administrator.
+
+Revision History
+
+Revision history is tracked in the N2 database for all document and folder objects.  There are two types of Revision History:
+
+1.	Attribute History (documents and folders)
+2.	Version History (document objects only)
+
+Attribute History
+
+
+Press the   button next to any document or folder to display the Attribute History.  Attribute History shows when any form data is created or modified.  It shows:
+
+•	Attribute name
+•	Original value
+•	Modified value
+•	Modified by User ID
+•	Date and time modified or created
+
+ 
+Document Version History
+
+N2 maintains a history record for every version of a document.  When a document is created, the History is created for version 1 of the document.
+
+History does not track specific changes to a document, only that is was changed.  For example, history does not track that a Word document had a particular paragraph added.  You can always view a particular version of the document to see the change.
+
+When you check a revised document into the system, you can specify a Reason and a Description for the change:
+
+ 
+
+ 
+If you upload the file for check-in, the following is displayed:
+
+ 
+
+Key is the Reason and the Description of the change (What).  This will be recorded in the Version History.  Version History is available by pressing the Version History Icon . It shows:
+
+•	Version
+•	Reason
+•	Version Description
+•	Modified by User ID
+•	Date and time modified or created
+
+An example is shown below:
+
+ 
+ 
+Document Storage
+
+All N2 Folder and Document objects are stored in Repositories.  The native N2 repository uses the Windows File System. The repository can be configured to store Folder and Document objects in MS SQL Server or Oracle relational databases.  It is also possible to link to outside repositories if they supply the required services.  For more information on outside repositories talk to your N2 dealer or support contact.
+
+Repositories can be added by the N2 administrative users.  A repository has a name, a description, and information that define its location on the network and its storage characteristics.
+
+Only the N2 Administration user has direct access to the repository data through the file system or SQL Query.  Users cannot directly access the repository, but only access objects through N2.  This is necessary to maintain security throughout the system.
+
+All objects added to the N2 native repository may use either the Add Document function of N2 for single documents, or for multiple batches of documents and folders, the Import-Capture batch process as described in this document.  The Capture process creates instances of the objects in the Repository and updates the N2 database to profile the objects and store the location of the objects within the repository.
+
+To add a single document to the system, select the document or folder template and then press the Add Document (or Add Folder) button from the Search Panel.
+
+
+ 
+
+Select the document template and browse to the file you wish to add.  Press the Add Document button again to add the document. User can also add an attachment from his/her mails. For this click on the “Import from Mail” link to get a list of all mails. Click on   to view details and click on the “import” link against the required attachment.
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+When the document is added, it will be displayed so that attributes may be added also.
+
+ 
+Add Single Folders to the Repository
+
+To add single Folders to the Repository press the Add Folders button on the Search Panel for a Folder template.  The Folder Index panel is displayed.  Here you can add index attributes to the folder and add documents into the folder.  Text Notes may also be added.
+
+
+ 
+ 
+Search, Retrieval, and Viewing
+
+The N2 client application provides access to all folder and document objects in the system.  Documents 
+
+Documents or Folders are accessed for retrieval and viewing by the Search function.  This is invoked by clicking on the Folder or Document Template Name you wish to search:
+
+ 
+
+
+ 
+Document Viewing
+N2 features a Universal Viewer, a patented system for the progressive rendering of a wide variety of file formats such as well as Microsoft Word, Excel, PowerPoint, Project, Visio, Adobe PDF, TIFF, GIF, JPEG, TXT, HTML, and many more.  N2 allows users of the system to view all documents through a Web browser without having to install any document-specific software locally on their workstations.
+
+•	High-speed image and thumbnail display of all document types
+•	Extensive document annotation capabilities
+•	Image adjustment capabilities (zoom, rotate, fit, etc.) 
+•	Image transformation (rotating, horizontal/vertical flipping) 
+•	Local save and print capabilities
+•	Local image saving to either TIFF or the original format 
+•	Thumbnail browsing of documents and images
+
+
+
+  
+N2 supports the following electronic document types with many different combinations of formats.  A complete chart with all the variations and compression methods supported is contained in the technical section of this document.
+
+•	ASCII Text (TXT)
+•	Bitmapped Graphics Win/OS2 (BMP)
+•	Microsoft Word Document (DOC)
+•	Microsoft Excel (XLS)
+•	Microsoft PowerPoint (PPT)
+•	Microsoft Project (PRJ)
+•	Microsoft Visio (VSD)
+•	Graphic Interchange Format (GIF)
+•	Hypertext Markup Language (HTM, HTML)
+•	Joint Photographic Experts Group (JPEG, JFIF, JPG)
+•	Portable Document Format (PDF)
+•	Rich Text Format (RTF)
+•	Tagged Image File Format – (TIFF, TIF)
+
+ 
+History
+
+N2 provides a complete audit trail of all activity against a repository object through the history function.  History shows when the object was created or modified and what attributes got changed by who and when.  The information is maintained by N2 and cannot be edited.
+
+Click on the history icon to open the history for the given document in a new window.
+
+ 
+ 
+Workflow
+
+N2 enables to re-engineer business processes to achieve productivity gain, efficiency and improved customer services using workflow. Workflow allows an organization to create and establish business process by describing how the tasks are done, by whom, in what order and how quickly
+
+Using N2, workflow process map (route) can be designed and published. Designated users can start workflow processes and at each step of the process user are assigned to process tasks by inputting or updating data and documents and perform the various business tasks.
+
+Defining Workflow
+
+The business process can be designed in Workflow designer. Based on the kind of activities in the process; routing rules, fields and views can be defined. The file is saved with a .wfd extension.
+
+After designing the process in the designer, the file is uploaded in N2. This is followed with mapping of users to corresponding activities. The users can access items lying on their designated activities.
+
+ 
+Workflow Features
+
+Workflow allows users to create, send and receive data and documents into the defined flow and act on them.
+
+ 
+
+To retrieve past work items user can use the extensive search feature which searches items based on the specified criteria.
+
+ 
+
+Workflow management also provides a history feature where the complete flow of the workflow can be seen from start to end and all the intermediate steps. The history shows the data and documents present on each step.
+
+ 
+ 
+N2 Full-text search
+
+N2 full-text search facilitates the searching of document stored on the basis of their contents. N2 full-text search is carried out by two separate processes:
+•	Indexing process
+•	Searching and retrieval process
+Indexing and retrieval can be done simultaneously.
+
+Indexing process:
+Indexing is the process of the describing or identifying a document in terms of its subject content for easy retrieval of the document in latter cases., Indexing process is carried out by windows service configured to run in one of the two modes:
+•	On the fly
+o	Here the documents are indexed as they are added into N2 repository. 
+•	Scheduled 
+o	Here the documents are indexed on scheduled time.
+
+It stores document content as well as document metadata (i.e. Title, Filename, Date modified etc.). Searching on metadata can be performed using Field search.
+
+Searching and retrieval process:
+The searching is done by retrieving information from search index which is created by indexing process.
+
+ 
+
+
+Searching for “reports AND windows” 
+
+ 
+
+
+N2 Full-text search shares the following feature set:
+1.	Searching documents by specifying words.
+Example: vacation finds documents containing the word vacation
+2.	Various types of searching techniques can be performed. 
+The following types of searching techniques are possible in N2 Full-text search:
+•	Phrase search finds phrases.
+Example: “to each his own” finds documents containing the exact phrase to each hi own
+•	Boolean search can make use of operators AND/OR/NOT
+Example: Vacation OR Hawaii   finds documents containing either the word Vacation or the word Hawaii
+Example: virus NOT computer   finds documents containing the word virus but not the word computer
+Example: virus AND computer   finds documents containing the word virus and the word computer
+•	Group search perform search by combining several search techniques 
+Example: (solusoft OR Ahmedabad) AND website   finds documents containing the words solusoft or Ahmedabad and website
+•	Fuzzy search finds search terms even if they are misspelled with the help of “~” operator. Fuzziness can be adjusted within the range of 0 – 1. Default fuzziness value is 0.5.
+Example: roam~   finds documents containing the words like foam, roams etc.
+•	Wildcards search support “?” to hold a single letter place, and “*” to hold multiple letter space.
+Example: test*   finds documents containing the words test, tests or tester.
+Example: te?t  finds documents containing the words text or test.
+Note: You cannot use a * or ? symbol as the first character of a search.
+•	Field search performs search on document metadata stored during indexing. Searching on fields can be performed by specifying a pair of field name and field value separated by colon “:”.
+Example: title: “PurchaseOrder.doc” finds documents having title “PurchaseOrder.doc”
+•	Range search allow one to match documents whose field(s) values are between the lower and upper bound specified by the Range Query. Range Queries can be inclusive or exclusive of the upper and lower bounds.
+	Example: mod_date:[20020101 TO 20030101] finds documents whose mod_date fields have values between 20020101 and 20030101, inclusive.
+3.	Search results shows the document excerpts of the matching documents along with the bolded words from the query specified.
+4.	Support indexing of documents written Latin, Russian, and English.
+5.	Paging in search results for simplifying the viewing.
+6.	Documents that match the query are ranked based on the number of times the terms occurs in the document
+
+Supported Formats
+
+N2 full-text search can index as well as retrieve documents of the following formats:
+•	ASCII Text (TXT)
+•	Microsoft Word Document ( DOC )
+•	Hypertext Markup Language (HTM, HTML)
+•	Portable Document Format (PDF)
+•	Microsoft PowerPoint (PPT)
+•	Microsoft Project (PRJ)
+•	Rich Text Format (RTF)
+•	Tagged Image File Format – (TIFF, TIF)
+•	Microsoft Visio (VSD)
+•	Microsoft Windows Metafile, Enhanced Windows Metafile (WMF, EMF)
+•	Microsoft Excel (XLS)
+
+ 
+Administration and Security
+
+Security Overview
+
+Document security and access control restricts the functionality of the system and access to documents to certain defined users and roles.  This is done using the following methods.
+
+Authentication – Users are authenticated by their Windows Server logon username.  N2 requires that the user logon to the Windows domain and enter valid password information.  N2 provides authentication by requiring the user to logon to the local Windows operating system.
+
+Authorization – N2 maintains a list of authorized users of the system, their name, and their roles.  A user can have one or more roles.  Roles can be added to the system as needed.  Each role authorizes certain permissions in the system.  One or more Access Control Lists (ACLs) are assigned to each Role.
+
+Access Control Lists
+N2 uses Access Control Lists (ACL’s) to control access to every object in the system (Repository Objects, Templates, Fields, Administrative utilities).    A user cannot access any object which they have not been given specific permission.
+
+Permission to access an object is granted to the user by being associated with the role assigned to the ACL that governs that object.
+
+Read – required to read a document or folder or access any repository object
+Write – required to create an object in the repository
+Modify – required to update a repository object
+Delete – required to delete or remove a repository object
+Manage – required to administer the system and access the administrative tools options
+
+Users, Roles, and ACLs can be either System or User-defined.  System defined entities are shown below.  User-defined roles may be added as necessary, and generally are used to define the functional group that a user belongs to, such as Customer Service.
+
+System ACL
+
+The System ACL has the following permissions:
+
+Read – required to read a document or folder or access any repository object
+Write – required to create an object in the repository
+Modify – required to update a repository object
+Delete – required to delete or remove a repository object
+Manage – required to administer the system and access the administrative tools options
+
+The System ACL cannot be changed.
+
+The Owner Role is a system-defined role assigned to the Admin user.  The System ACL is assigned to the Owner Role by default.  This cannot be changed.
+
+To create new ACLs, click the Administrative Tools, ACLs item.
+
+•	Enter a new ACL name and click  to create a new ACL. 
+•	Click on  to delete the selected ACL from the system. 
+•	The left list box below the ACLs shows the roles associated with the selected ACL. 
+•	The list box below the roles shows the permissions associated with the role. 
+•	The right list box below the roles shows the remaining permission. 
+•	The right list box below the ACLs shows the remaining roles. 
+•	Using the  remaining roles / permissions can be added into the system. 
+•	Using the  roles / permissions can be removed from the system. 
+
+ 
+
+
+Roles
+To list all the Roles in the system Navigate to "Administrative Tools -> Roles". The role management screen lists the existing users in the system.  The role screen has the following features:-
+•	The roles screen lists all the roles in the system and the users associated with the role. 
+•	Enter the role name in the text box and click  to add roles into the system. 
+•	Click  to delete the selected role from the system. 
+•	The section below “Add Role” shows how existing roles can be configured. 
+•	The left list box shows the current users associated with the selected role. 
+•	The right list box shows the remaining users for the selected role. 
+•	Using the  icon remaining users can be added into the system. 
+•	Using the  icon users can be removed from the selected role. 
+•	Note that “Owner” role and “Admin” user cannot be modified. 
+
+ 
+ 
+Administrative User Logon
+
+The administrative user logon ID and password is created when the N2 server is installed.  By default, the administrative user ID is admin with password test.  This user is assigned the Owner role and the System ACL.  If you do not change an administrative password when the system is installed, you should do so immediately for security reasons.
+
+ 
+
+
+ 
+Event Handlers
+This utility is used to attach functions in uploaded plug-ins as event handlers to existing system events.
+Navigate to the Event Handler screen by clicking "Event Handlers" within the "Administrative Tools". 
+A plug-in for attaching event handler has to be a .NET 1.1 DLL.
+ 
+
+•	Template – Select the template for which to attach event
+•	 Event – The event to attach handler to
+•	 Event Arguments – Displays the required signature of the event handler
+•	 Plug In – Select the plug-in which contains the event handler
+•	 Class Path – The class containing the event handler function
+•	 Method – The event handling method
+•	 Method Signature – The signature of the selected method
+•	 Save – Save the information
+
+Scroll down the screen to see a list of the event handlers that are already attached. These can be deleted by clicking on  
+ 
+Integration
+
+N2 allows you to easily run your standard desktop and legacy system software in conjunction with its powerful search and retrieval capabilities.  For example, a financial advisor can be accessing their client database, and use N2 to automatically search and find the documents related to the client, such as the application and the financial statement.  Customer monthly statements output from the financial reporting system can be stored in the DMS and associated with the client.
+
+Other Integration methods include:
+
+•	Web Services integration to and from N2
+
+•	Standard capture interface for inbound fax from popular fax gateway products
+
+•	Optional print data stream translation applications.
+
+•	COM objects for specialized DCM functions
+
+•	Custom Query definition capability
+
+
+ 
+N2 Technical Specifications
+
+N2 is developed with the following technical features:
+
+•	Microsoft ASP.NET browser-based application
+
+•	Developed in C# for speed and reliability
+
+•	Uses Microsoft SQL Server Or Oracle  database systems
+
+•	Uses Microsoft Internet Information Server (IIS)
+
+•	Microsoft Windows 2003, Advanced Server, and Storage Server support
+
+•	Document rendering at the central server
+
+•	Multi-processor server support
+
+•	Web-based system administration
+
+•	Authentication 
+o	N2 Internal authentication
+o	External authentication using windows 2000/2003 Active Directory Services
+
+•	Powerful ACL security authorization
+
+N2 Server Requirements
+
+N2's minimum server requirements are as follows:
+
+•	Pentium IV 3.0 GHz 
+•	1 GB RAM (2 GB preferred)
+•	Microsoft Windows Server (2000 & 2003) 
+•	Microsoft Internet Information Server (IIS) Version 6
+•	Microsoft .NET Framework 1.1
+
+Microsoft Office 2003 is required on the server if Office documents (Word, Excel, PowerPoint, etc.) are to be rendered in the client viewer.
+
+N2 Client Requirements
+
+Requirements for the N2 client are as follows:
+
+•	Microsoft Windows 2000, XP
+•	Microsoft Internet Explorer 5.0 or higher or Firefox 1.0 or higher
+•	Sun JRE 1.5 (Java Runtime Environment 1.5) or higher
+ 
+N2 Overview
+
+N2 is a Workflow and Document Content Management system that enables organizations to manage the creation, revision, approval, and consumption of electronic documents.  It provides the following major features:
+
+•	Capture – Documents are captured by batch scan systems and automatically entered into the system in batch mode or by a user in single-document mode. During capture text indexing is completed by N2 text indexing service
+•	Profile – Documents are indexed using configurable templates and organized into folders as appropriate
+•	Revise –Document revisions are controlled and annotations are stored separately
+•	Version control – Multiple versions of documents and history of versions are tracked
+•	Storage – Documents are stored in magnetic file system repositories or MSSQL/Oracle repository. The file system repository can utilize NAS or SAN storage sub system. 
+•	Search – Folder or document attributes are utilized to search documents and folders
+•	Text Search – Powerful document content text search is utilized to instantly find documents 
+•	View – Rich multi-file format viewer
+•	Security
+o	Authentication is provided using internal user id and password or with external authentication using LDAP.
+o	Authorization is role-based security and control over access and modifications to documents and folders
+•	Integration – Interface to external systems linking documents to business processes
+•	Utilities – Administration, email, fax, print, import and export documents
+•	One Drive Integration : Intégration with Microsoft One Drive sharing documents
+•	AutoCad intégration – The integration allowes a user to check out an engineering autocad dwg document and edit in Autocad. 
+
+N2 provides a single repository of current and archived documents for the entire company that everyone can access under security and control.  Documents can be captured in batch mode from external document scanning subsystems or imported into the system from your business processes using N2 import wizards.  Individual documents can also easily be added to the system by office users or creator of the documents.  N2 provides complete profiling and indexing capabilities, including the ability to assign unlimited field attributes to document and folder templates and to organize documents into folders.
+
+N2 provides the user with the ability to search for documents and folders, view and revise the documents under version control, store and manage them.  Documents and folders can be searched for using any combination of field attributes set up in document templates. 
+
+Document revision requires that documents be checked out of the repository, revised, and checked back into the repository.  Complete revision history is tracked so that when a document is created, modified, or deleted, the user id, date and time of the revision is maintained.
+
+Security is provided using internal authentication or through external authentication using LDAP. Authorization is maintained over all documents and folders through a powerful role-based security model that maps Access Control Lists to roles and templates.  Complete control is provided for rights to read, write, modify, delete, and manage documents and folders.
+
+
+N2 features a revolutionary Universal Document Viewer, a patented system for the progressive rendering of image formats as well as Microsoft Word, Excel, PowerPoint, Project, Visio, Adobe PDF, TIFF, GIF, JPEG, TXT, HTML, CAD files, and many more.  N2 allows users of the system to view all documents through a Web browser without having to install any document-specific software locally on their workstations.
+
+•	High-speed image and thumbnail display of all document types
+•	Scale-to-gray and other display enhancements 
+•	Extensive document annotation capabilities
+•	Image adjustment capabilities (zoom, rotate, fit, etc.) 
+•	Image transformation (rotate, horizontal/vertical flipping) 
+•	Local save, print and email capabilities
+•	Detachable document viewer window, detachable thumbnail window
+•	Local image saving to either TIFF or the original format 
+•	Thumbnail browsing of documents and images
+•	Advanced image navigation, through browser-like history list 
+•	Annotation editing support with full layer (256 layers) and security control
+•	Hyperlinking within document pages and between multiple documents
+

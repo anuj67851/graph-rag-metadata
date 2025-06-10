@@ -1,0 +1,70 @@
+entity_types:
+  - PERSON
+  - ORGANIZATION
+  - LOCATION
+  - PROJECT
+  - TECHNOLOGY
+  - PRODUCT_SERVICE
+  - EVENT
+  - FINANCIAL_PERIOD
+  - FINANCIAL_METRIC
+  - AGREEMENT_CONTRACT
+  - INDUSTRY_CONCEPT
+  - ACADEMIC_DEGREE
+  - JOB_ROLE
+
+relationship_types:
+  # Person to Organization/Person/Project/Location
+  - WORKS_FOR                 # PERSON -> ORGANIZATION {properties: role, start_date, end_date}
+  - PREVIOUSLY_WORKED_AT
+  - CEO_OF
+  - CTO_OF
+  - MEMBER_OF_TEAM
+  - LEADS_INITIATIVE
+  - REPORTS_TO
+  - JOINED_ORGANIZATION       # PERSON -> ORGANIZATION {properties: year}
+  - CHAMPIONED_IDEA
+  - HOLDS_DEGREE              # PERSON -> ACADEMIC_DEGREE {properties: field_of_study, institution}
+  - SPECIALIST_IN             # PERSON -> INDUSTRY_CONCEPT / TECHNOLOGY {properties: field_of_study}
+
+  # Organization to Organization/Project/Technology/Location/Event/Agreement
+  - DEVELOPS
+  - HEADQUARTERED_IN
+  - HAS_RESEARCH_WING_IN
+  - HAS_TEAM_IN
+  - OPERATES_FACILITY_IN
+  - TARGETS_MARKET
+  - PARTNERS_WITH             # ORGANIZATION -> ORGANIZATION {related_to: AGREEMENT_CONTRACT, properties: value_usd, date_signed}
+  - ALLIED_WITH               # ORGANIZATION -> ORGANIZATION {related_to: AGREEMENT_CONTRACT, purpose: "deploy solutions"}
+  - SUPPLIER_FOR              # ORGANIZATION (supplier) -> ORGANIZATION (customer) {item_supplied: TECHNOLOGY / PRODUCT_SERVICE}
+  - CUSTOMER_OF
+  - COMPETES_WITH
+  - INVESTS_IN
+  - ANNOUNCED_AT_EVENT        # ORGANIZATION -> EVENT {item_announced: PROJECT / FINANCIAL_METRIC / PARTNERSHIP}
+  - WORKS_WITH
+  - OWNS_STOCK_SYMBOL
+
+  # Project / Technology / Product related
+  - LEVERAGES_TECHNOLOGY
+  - BASED_ON_TECHNOLOGY
+  - COMPONENT_IS
+  - HAS_BUDGET                # PROJECT -> FINANCIAL_METRIC {properties: amount_usd, duration_years}
+  - AIMS_TO_ACHIEVE
+  - RELATED_TO_INDUSTRY
+
+  # Event related
+  - OCCURRED_IN_PERIOD
+  - TOOK_PLACE_IN
+  - INVOLVES_PARTICIPANT
+  - SHOWCASED_RESULTS         # EVENT -> FINANCIAL_METRIC {properties: value, change_percentage, period}
+  - CONCERNS_ENTITY
+
+  # Agreement related
+  - GOVERNS_SUPPLY_OF
+  - ESTABLISHES_PARTNERSHIP
+
+  # Generic location relationship
+  - LOCATED_IN
+
+allow_dynamic_entity_types: True
+allow_dynamic_relationship_types: True
