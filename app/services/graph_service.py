@@ -76,24 +76,19 @@ async def get_top_n_busiest_nodes(top_n: int = 10) -> Subgraph:
 
     logger.info(f"Returning subgraph for busiest nodes with {len(subgraph_result.nodes)} nodes and {len(subgraph_result.edges)} edges.")
     return subgraph_result
-
 async def safely_remove_file_references(filename: str):
     """
-    Finds all nodes and relationships referencing a file and "safely" removes them.
-    If a node or relationship is only referenced by this file, it's deleted.
-    Otherwise, just the filename reference is removed from its properties.
+    Finds nodes/relationships referencing a file and safely removes them.
+    If a node/relationship is only referenced by this file, it's deleted.
+    Otherwise, just the filename reference is removed from its property list.
     """
     neo4j_conn: Neo4jConnector = await get_neo4j_connector()
     logger.info(f"Initiating safe removal of references for file: '{filename}' in Neo4j.")
-
-    # This is a complex operation and is best done with a Cypher query
-    # that handles the logic atomically within the database.
-    # The query finds all nodes and relationships that have the filename in their
-    # source_document_filename property.
     query = """
+    // Process Nodes first
     MATCH (n) WHERE $filename IN n.source_document_filename
-    WITH n, size(n.source_document_filename) as source_count
-    // If the file is the only source, detach and delete the node
+    WITH n, size(n.source_document_filename) AS source_count
+    // If this file is the only source, detach and delete the node
     FOREACH (_ IN CASE WHEN source_count = 1 THEN [1] ELSE [] END |
         DETACH DELETE n
     )
@@ -101,19 +96,20 @@ async def safely_remove_file_references(filename: str):
     FOREACH (_ IN CASE WHEN source_count > 1 THEN [1] ELSE [] END |
         SET n.source_document_filename = [file IN n.source_document_filename WHERE file <> $filename]
     )
-    WITH count(n) as nodes_processed
+
+    // Then, process Relationships
+    WITH 'nodes done' as marker
     MATCH ()-[r]-() WHERE $filename IN r.source_document_filename
-    WITH r, size(r.source_document_filename) as source_count, nodes_processed
-    // If the file is the only source, delete the relationship
+    WITH r, size(r.source_document_filename) AS source_count
+    // If this file is the only source, delete the relationship
     FOREACH (_ IN CASE WHEN source_count = 1 THEN [1] ELSE [] END |
         DELETE r
     )
-    // If there are other sources, just remove the filename from the list
+    // If there are other sources, remove the filename from the list
     FOREACH (_ IN CASE WHEN source_count > 1 THEN [1] ELSE [] END |
         SET r.source_document_filename = [file IN r.source_document_filename WHERE file <> $filename]
     )
-    RETURN nodes_processed, count(r) as rels_processed
     """
     params = {"filename": filename}
-    result = await neo4j_conn.execute_query(query, params)
-    logger.info(f"Neo4j safe removal completed for '{filename}'. Result: {result}")
+    await neo4j_conn.execute_query(query, params)
+    logger.info(f"Neo4j safe removal process completed for '{filename}'.")

@@ -55,13 +55,12 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
         context_chunks_for_expansion = [chunk['chunk_text'] for chunk in context_chunks_meta]
 
     # --- Stage 2: Context-Aware Query Expansion ---
-    queries_for_main_search = [user_query]
+    queries_for_main_search = [user_query,]
     if query_expansion_config.get('enabled') and context_chunks_for_expansion:
         context_text = "\n---\n".join(context_chunks_for_expansion)
         expanded_queries = await generate_expanded_queries_from_context(user_query, context_text)
         queries_for_main_search.extend(expanded_queries)
-        # Remove duplicates
-        queries_for_main_search = list(set(queries_for_main_search))
+        queries_for_main_search = list(set(queries_for_main_search)) # De-duplicate
 
     logger.info(f"Performing main search with {len(queries_for_main_search)} queries: {queries_for_main_search}")
 

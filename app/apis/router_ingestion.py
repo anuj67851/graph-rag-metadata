@@ -68,11 +68,15 @@ async def upload_files_for_ingestion(
             logger.error(f"Failed to add record to SQLite for file '{filename}'.")
 
     if not accepted_files:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="None of the provided files were of a supported type.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="None of the provided files were of a supported type. Please upload PDF, TXT, DOCX, or MD files."
+        )
 
     return {
-        "message": "Files accepted for background processing.",
-        "accepted_files": accepted_files
+        "message": f"{len(accepted_files)} of {len(files)} files were accepted for background processing.",
+        "accepted_files": accepted_files,
+        "skipped_count": len(files) - len(accepted_files)
     }
 
 @router.get("/documents/", response_model=List[dict])
