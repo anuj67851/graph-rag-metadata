@@ -49,7 +49,7 @@ class ReRanker:
 
         # 3. Attach the new scores back to our original SourceChunk objects.
         for i, chunk in enumerate(chunks):
-            chunk.score = new_scores[i]
+            chunk.score = float(new_scores[i])
 
         # 4. Sort the chunks in descending order based on their new scores.
         chunks.sort(key=lambda x: x.score, reverse=True)
