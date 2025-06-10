@@ -1,5 +1,3 @@
-version: '3.11'
-
 services:
   # The main Python FastAPI application
   rag-api:
@@ -8,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app  # Mounts the current directory into the container for live code changes
+      - .:/app
     env_file:
       - .env
     depends_on:
@@ -28,23 +26,23 @@ services:
       - weaviate_data:/var/lib/weaviate
     restart: on-failure
     environment:
-      # We specify the text2vec-transformers module to run Hugging Face models
       ENABLE_MODULES: 'text2vec-transformers'
-      # Tell Weaviate where to find the model inference container
-      TRANSFORMERS_INFERENCE_API: 'http://t2v-transformers:8080'
-      # Standard Weaviate settings
-      QUERY_DEFAULTS_LIMIT: 25
+      TRANSFORMERS_INFERENCE_API: 'http://transformers-inference:8080'
+      DEFAULT_VECTORIZER_MODULE: 'text2vec-transformers'
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       CLUSTER_HOSTNAME: 'node1'
+    depends_on:
+      - transformers-inference
 
   # Hugging Face Model Container (managed by Weaviate)
-  t2v-transformers:
-    image: cr.weaviate.io/semitechnologies/t2v-transformers:sentence-transformers-multi-qa-mpnet-base-cos-v1
-    container_name: transformers-container
+  transformers-inference: # The FIX: Service name updated for clarity
+    # The FIX: Correct image repository 'transformers-inference'
+    image: cr.weaviate.io/semitechnologies/transformers-inference:sentence-transformers-multi-qa-mpnet-base-cos-v1
+    container_name: transformers-inference-container
+    restart: on-failure
     environment:
-      # This tells the container to download and cache a different model if needed.
-      # This allows flexibility, but for production it's best to build a custom image.
+      # This allows you to switch models via the .env file if you wish
       SENTENCE_TRANSFORMERS_MODEL: ${EMBEDDING_MODEL_REPO:-sentence-transformers/multi-qa-mpnet-base-cos-v1}
       ENABLE_CUDA: '0' # Set to '1' if you have a configured GPU
 
@@ -53,12 +51,11 @@ services:
     image: neo4j:5.18.0
     container_name: neo4j-container
     ports:
-      - "7474:7474" # Neo4j Browser
-      - "7687:7687" # Bolt port for driver connection
+      - "7474:7474"
+      - "7687:7687"
     volumes:
       - neo4j_data:/data
     environment:
-      # Use environment variables from the .env file
       NEO4J_AUTH: ${NEO4J_USERNAME}/${NEO4J_PASSWORD}
     restart: on-failure
 
