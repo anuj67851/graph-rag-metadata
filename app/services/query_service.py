@@ -112,7 +112,7 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
                 for doc_name, doc_chunks in chunks_by_doc.items():
                     reranked_group = reranker.rerank_chunks(user_query, doc_chunks)
                     # This could be made configurable, e.g., 'top_n_per_reranked_doc'
-                    final_chunks_for_context.extend(reranked_group[:1]) # Take the top 1 from each doc
+                    final_chunks_for_context.extend(reranked_group[:reranking_config.get('final_top_n', 3)]) # Take the top 1 from each doc
                 logger.info(f"Re-ranked and selected top chunks from {len(chunks_by_doc)} documents.")
             else:
                 # Global query, so re-rank the whole set together

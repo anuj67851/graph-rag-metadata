@@ -27,7 +27,7 @@ retrieval_pipeline:
   reranking:
     enabled: true
     model_repo: "cross-encoder/ms-marco-MiniLM-L-6-v2"
-    # After re-ranking the main_search_top_k results, how many to keep
+    # After re-ranking the main_search_top_k results, how many to keep for single document
     final_top_n: 3
 
 # --- Embedding Model (Hugging Face) ---

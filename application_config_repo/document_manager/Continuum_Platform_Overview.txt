@@ -1,0 +1,307 @@
+Contents
+
+Introduction 2
+About Vertex Systems 2
+Continuum Platform Overview 3
+The Continuum User Interface 4
+Deployment Architecture 6
+Incident and Request Management 9
+The Incident Lifecycle 9
+The Service Catalog 10
+Service Level Agreements (SLAs) 11
+The Configuration Management Database (CMDB) 13
+CMDB Overview 13
+Configuration Items (CIs) 14
+CI Classes and Attributes 16
+Dependency Mapping 19
+Change and Release Management 22
+Change Control 22
+The Change Advisory Board (CAB) 22
+Release Planning 23
+Automation and Orchestration 25
+Visual Workflow Builder 28
+Orchestration Engine 29
+Knowledge Management and Search 30
+Governance and Security 32
+Security Overview 33
+Access Policies 33
+System Roles 33
+Platform Administrator Logon 39
+Integrations and Connectors 41
+The Continuum API 42
+Technical Specifications 43
+
+Trademark Notices
+
+Continuum and the Continuum logo are trademarks of Vertex Systems Inc.
+
+ITIL® is a registered trademark of AXELOS Limited.
+
+ServiceNow, and the ServiceNow logo are registered trademarks of ServiceNow, Inc.
+
+Atlassian, Jira, and Confluence are registered trademarks of Atlassian Pty Ltd.
+
+All other third-party products mentioned in this document are trademarks of their respective companies.
+
+Introduction
+
+This document provides a comprehensive overview of Continuum, the unified IT Service and Operations Management (ITSM/ITOM) platform from Vertex Systems. ITSM platforms are essential for modern enterprises to manage the delivery of IT services to their employees, streamline support processes, and maintain the health of their technology infrastructure. Continuum enables organizations to improve service quality, increase operational efficiency, and align IT activities with business goals.
+
+Continuum is a next-generation platform built entirely on a modern, API-first architecture. It leverages automation and artificial intelligence to provide proactive insights, reduce manual effort, and resolve issues faster. Continuum is delivered as a highly available cloud service, with client access through any standard web browser. There is no client-side software to install, and the interface is designed to be clean, responsive, and intuitive for both IT professionals and end-users.
+
+Continuum is designed to support the full spectrum of ITIL-aligned processes, including Incident Management, Problem Management, Change Management, and Request Fulfillment. It is also built to manage modern cloud infrastructure and DevOps practices. Pre-configured process templates are available for common use cases and can be easily customized by process owners without coding.
+
+About Vertex Systems
+
+Vertex Systems Inc. is an industry leader in enterprise service management software. Founded on the principle of simplifying complex IT operations, Vertex Systems has been helping global organizations transform their IT service delivery since 2014. Continuum support, implementation, and advisory services are available worldwide through Vertex Systems Professional Services and a network of certified partners.
+
+Overview
+
+Continuum is a unified platform that enables organizations to manage the complete lifecycle of IT services, from user requests to infrastructure changes. It provides the following major features:
+
+• Incident Management – Capture, track, and resolve IT issues to restore service as quickly as possible, minimizing business impact.
+• Problem Management – Identify and address the root cause of recurring incidents to prevent future disruptions.
+• Change Management – Control the lifecycle of all changes to the IT environment, from creation and approval to implementation and review.
+• Service Catalog – Provide a user-friendly storefront where employees can request IT services and products, from new laptops to software access.
+• CMDB – Maintain a centralized Configuration Management Database to store information about all IT infrastructure components (CIs) and their relationships.
+• Automation – Automate routine tasks and processes, such as password resets or user onboarding, using a no-code workflow engine.
+• Knowledge Management – Create and maintain a searchable knowledge base of articles to enable self-service for end-users and provide consistent solutions for IT staff.
+• Reporting & Analytics – Utilize real-time dashboards and powerful reporting to track KPIs, monitor service levels, and gain insights into IT performance.
+• Security
+o Authentication is provided via internal credentials or integration with external identity providers (SAML, OIDC, Azure AD).
+o Authorization is governed by a robust, role-based access control model that dictates access to data and system functionality.
+• Extensibility – Integrate with the entire IT ecosystem, from monitoring tools to cloud providers, via a comprehensive REST API and pre-built connectors (Spokes).
+
+Continuum provides a single system of record for all IT activities, ensuring that all teams are working with the same data. Incidents and requests can be created via a self-service portal, email, or API integrations with monitoring tools. The platform provides complete data modeling capabilities, allowing administrators to define custom CI classes and add unlimited attributes to any record type.
+
+Continuum empowers IT leaders with complete visibility into service performance and infrastructure health. Service Level Agreements (SLAs) are tracked against all incidents and requests, with automated escalations to ensure timely resolution.
+
+The security model is designed to support the needs of large, complex organizations, providing granular control over data visibility and user permissions. This ensures that sensitive information is protected and that users can only perform actions appropriate to their role.
+
+Continuum features a powerful global search that allows users to instantly find information across the entire platform, including incidents, knowledge articles, CIs, and user records.
+
+• Unified search across all applications.
+• AI-powered search suggestions.
+• Contextual search results tailored to the user's role.
+• Ability to search within attached documents.
+
+The Continuum User Interface
+Once an IT agent logs into the system, their personalized workspace displays an overview of their assigned work, high-priority incidents, and SLA breach warnings.
+
+[Screenshot of the Continuum Agent Workspace, showing a dashboard with widgets for "My Open Incidents," "Team's Queue," "Pending Approvals," and "SLA Status."]
+
+Clicking on an incident record opens the full incident form, which provides a detailed view of the issue, the affected user, the related CI, and a complete activity log.
+
+[Screenshot of the Continuum Incident Form, showing fields for user, category, priority, impact, and a timeline of all work notes and state changes.]
+
+Deployment Architecture
+
+The Continuum Platform features:
+• Cloud-native, multi-tenant architecture.
+• Horizontally scalable, microservices-based design.
+• Hosted in secure, compliant data centers across multiple geographic regions.
+• Web-based platform administration and development studio.
+• Native integration with enterprise identity providers.
+• Granular, role-based security model.
+
+Continuum is designed as a pure SaaS platform, eliminating the need for customers to manage underlying infrastructure. The architecture is built for high availability and performance, capable of supporting the needs of the world's largest enterprises.
+
+[Diagram showing the Continuum architecture, with clients connecting via a load balancer to the application nodes. These nodes run various services (Incident, Change, CMDB) and communicate with a clustered database, a search index, and an automation message queue.]
+
+Incident and Request Management
+
+The Incident Lifecycle
+
+The primary goal of Incident Management is to restore normal service operation as quickly as possible and minimize the adverse impact on business operations. In Continuum, incidents are managed through a structured lifecycle.
+
+ Creation: Incidents can be created from multiple channels: the self-service portal, by an agent over the phone, automatically from an inbound email, or via API integration with an infrastructure monitoring tool.
+ Classification & Prioritization: Incidents are categorized (e.g., "Software," "Hardware," "Network") and prioritized based on their impact (number of users affected) and urgency (effect on business operations).
+ Investigation & Diagnosis: The assigned agent investigates the incident, utilizing the CMDB to understand related components and the Knowledge Base for potential solutions.
+ Resolution & Closure: Once a workaround or fix is implemented, the incident is resolved. After confirmation from the user, the incident is closed, and a resolution summary is documented.
+
+The Service Catalog
+
+The Service Catalog provides a centralized, user-friendly "storefront" where employees can browse and request IT products and services. This streamlines the request fulfillment process and provides a better user experience.
+
+Each catalog item has its own defined fulfillment workflow. For example:
+• Request a new laptop: Triggers an approval workflow to the user's manager, followed by a task to the hardware fulfillment team.
+• Request access to a software application: Triggers an approval workflow to the application owner, followed by an automated task to a script that grants the user access in Active Directory.
+
+[Screenshot of the Continuum Service Catalog, showing a grid of icons for items like "New Mobile Phone," "Password Reset," and "Onboard New Employee."]
+
+Service Level Agreements (SLAs)
+
+SLAs are a critical component of service management, defining the agreed-upon timeframes for responding to and resolving incidents and requests. Continuum allows administrators to configure detailed SLA definitions based on an incident's priority, category, or associated CI.
+
+The platform automatically tracks the time for each SLA and provides real-time visibility into performance.
+• Timers are displayed directly on incident and request forms.
+• Automated notifications and escalations are triggered if an SLA is at risk of being breached.
+• Dashboards and reports provide detailed analysis of SLA performance over time.
+
+The Configuration Management Database (CMDB)
+
+CMDB Overview
+
+The CMDB is a database used by an organization to store information about its hardware and software assets, referred to as Configuration Items (CIs). The CMDB is the heart of the Continuum platform, providing the contextual data needed to manage all other IT processes effectively.
+
+A well-maintained CMDB helps to:
+ Understand the relationships between different components of the IT infrastructure.
+ Assess the impact of an incident (e.g., which business services are affected by a server outage).
+ Plan changes more effectively by understanding the potential downstream impact.
+ Ensure compliance by tracking all IT assets and their configurations.
+
+Configuration Items (CIs)
+
+A CI is any component that needs to be managed in order to deliver an IT Service. CIs can be physical, logical, or conceptual.
+
+Examples of CIs include:
+• Hardware: Laptops, servers, routers, printers.
+• Software: Operating systems, database instances, business applications.
+• Services: Business services like "Email Service" or "ERP System."
+• Documents: Service contracts, technical diagrams.
+
+CI Classes and Attributes
+
+A CI Class is a type or category of CI. It acts as a template, defining the specific Attributes (data fields) that will be stored for all CIs of that type. Continuum provides a comprehensive set of out-of-the-box CI classes, and administrators can easily create new custom classes.
+
+ CI Class: "Windows Server"
+ Attributes: hostname, ip_address, os_version, ram_gb, cpu_count, location, owner.
+
+When an IT agent views an incident, they can see the CI that is affected and all of its relevant attributes directly on the form.
+
+[Screenshot of a "Windows Server" CI form in Continuum, showing all its attributes and related lists for open incidents, changes, and problems.]
+
+Dependency Mapping
+
+A key feature of the Continuum CMDB is its ability to map the relationships and dependencies between CIs. This is often visualized as a service map.
+
+For example, a service map for an "E-commerce Website" business service might show that it depends on:
+• A cluster of web servers.
+• A load balancer.
+• A specific database instance.
+• The underlying network switches.
+
+When an incident occurs on one of these components, the service map immediately visualizes the potential business impact, allowing for faster triage and communication.
+
+[A diagram representing a service map, with icons for different CIs connected by lines to show dependencies.]
+
+Change and Release Management
+
+Change Control
+
+The goal of Change Management is to ensure that standardized methods and procedures are used for the efficient and prompt handling of all changes to the IT infrastructure, in order to minimize the impact of change-related incidents upon service quality.
+
+In Continuum, this is managed through a formal Request for Change (RFC) record.
+• Standard Changes: Low-risk, pre-approved changes (e.g., patching a non-critical server). These can often be automated.
+• Normal Changes: Changes that require a full review and approval process.
+• Emergency Changes: Changes that must be implemented immediately to resolve a major incident. These are reviewed retrospectively.
+
+The Change Advisory Board (CAB)
+
+The Change Advisory Board (CAB) is a group of people responsible for assessing, prioritizing, and approving normal changes. Continuum provides a CAB Workbench to facilitate these meetings.
+
+The workbench provides:
+• A calendar view of all scheduled CAB meetings.
+• A clear agenda for each meeting, listing all RFCs to be reviewed.
+• A single screen for CAB members to view the details of each change and cast their vote (Approve/Reject).
+
+Release Planning
+
+Release Management bundles multiple approved changes together into a single release package. The Continuum platform provides tools for planning and scheduling releases to coordinate implementation and minimize disruption to the business.
+
+Automation and Orchestration
+
+Visual Workflow Builder
+
+The Continuum Workflow Builder allows administrators and process owners to automate any multi-step process without writing code. Using a drag-and-drop, flowchart-style interface, you can design workflows that:
+
+ Handle approval routing (e.g., send an approval request to a user's manager).
+ Create and assign tasks to different teams.
+ Set field values on records.
+ Send email notifications.
+ Wait for certain conditions to be met before proceeding.
+
+This tool is used to define the fulfillment processes for service catalog items, the approval process for change requests, and much more.
+
+[Screenshot of the Visual Workflow Builder, showing a canvas with connected nodes for "Start," "Get Manager Approval," "Create Task," and "End."]
+
+Orchestration Engine
+
+While the workflow builder automates processes within Continuum, the Orchestration Engine automates actions on external systems. It uses pre-built connectors (called Spokes) to interact with other IT tools and infrastructure.
+
+Common orchestration use cases include:
+• User Onboarding: A single service request in Continuum can trigger the Orchestration Engine to create a user account in Active Directory, assign a license in Office 365, and add the user to the correct channels in Slack.
+• Password Reset: A user requests a password reset via the portal. The orchestration authenticates their identity and automatically resets their password in the target system.
+• Cloud Provisioning: A developer requests a new virtual server. An approval workflow runs, and upon approval, the orchestration automatically provisions the server in AWS or Azure using an Infrastructure-as-Code template.
+
+Knowledge Management and Search
+
+The Continuum Knowledge Management application provides a centralized repository for creating, sharing, and managing information and documentation. This empowers both end-users (for self-service) and IT staff (for consistent issue resolution).
+
+• Rich Text Editor: Articles can include images, videos, and formatted text.
+• Versioning: A full history of article changes is maintained.
+• Feedback and Ratings: Users can rate the helpfulness of articles, providing valuable feedback to authors.
+• Knowledge-Centered Service (KCS) support: Agents can easily create knowledge articles from resolved incident tickets.
+
+The platform's Global Search provides a single search bar that queries across all applications, returning a unified, relevance-ranked list of results from incidents, problems, changes, and the knowledge base.
+
+Governance and Security
+
+Security Overview
+
+Platform security and data segregation are fundamental to Continuum. The security model provides granular control over what users can see and do.
+
+Authentication – Users can be authenticated by their Continuum credentials or via integration with a corporate identity provider (IdP) using SAML 2.0 or OIDC.
+
+Authorization – The Continuum platform uses a robust Role-Based Access Control (RBAC) model. Permissions are granted to users by assigning them one or more roles.
+
+Access Policies
+Access to data records (e.g., incidents, CIs) is controlled by a series of Access Control Lists (ACLs). These rules define the conditions under which a record can be read, written to, created, or deleted. For example, an ACL might state that only members of the "Network Team" assignment group can write to incident records categorized as "Network."
+
+System Roles
+A Role is a collection of permissions that grants access to applications and modules. Roles are assigned to groups, and users gain permissions by being members of those groups.
+
+Example roles:
+• itil: Grants basic access to the core ITSM applications (Incident, Problem, Change). Assigned to all IT support staff.
+• change_manager: Grants additional permissions to manage the change process and the CAB workbench.
+• admin: Grants full access to all applications and system configuration settings.
+
+Platform Administrator Logon
+
+The primary platform administrator account (with the admin role) is created during the initial instance provisioning. This account has full control over the platform. It is a critical security best practice to limit the use of this account, secure it with a strong password and MFA, and create other specialized administrator accounts with fewer privileges for day-to-day tasks.
+
+Integrations and Connectors
+
+Continuum is designed to be the central hub of an organization's IT operations. It provides several methods for integrating with other tools and systems.
+
+• Integration Hub: A library of pre-built connectors (Spokes) for popular enterprise systems like Active Directory, AWS, Azure, Slack, Microsoft Teams, and Jira.
+• Email Integration: Create or update records from inbound emails.
+• Data Import/Export: Tools for bulk-importing data (e.g., for the initial CMDB load) and exporting data for reporting.
+
+The Continuum API
+
+For custom integrations, Continuum offers a comprehensive set of versioned RESTful APIs. These APIs provide programmatic access to all data and functionality within the platform, allowing for deep, bi-directional integrations with any external system.
+
+Technical Specifications
+
+Continuum is developed with the following technical features:
+
+• Cloud-native, multi-tenant microservices architecture.
+• Backend services developed in Java and Go.
+• Frontend developed using a proprietary UI framework built on modern web components.
+• Uses multiple high-performance, clustered databases for transactional data and time-series metrics.
+• Uses a highly available, distributed search engine for global search.
+• Runs on a fully containerized infrastructure managed by Kubernetes.
+• Web-based administration and low-code/no-code development studio.
+
+Continuum Server Environment
+
+Continuum is a fully managed Software-as-a-Service (SaaS) platform. All server infrastructure, maintenance, patching, and upgrades are managed by Vertex Systems.
+
+Continuum Client Requirements
+
+Requirements for the Continuum client are as follows:
+
+• A modern, evergreen web browser (Chrome, Firefox, Safari, Edge).
+• A stable internet connection.
+• For mobile access, the Continuum mobile app is available for iOS and Android.

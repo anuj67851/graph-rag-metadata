@@ -15,6 +15,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "file_list" not in st.session_state:
     st.session_state.file_list = []
+if "processing" not in st.session_state:
+    st.session_state.processing = False
 
 def refresh_available_files():
     try:
@@ -52,16 +54,22 @@ for i, message in enumerate(st.session_state.messages):
                 with st.expander("Show Retrieved Knowledge Graph"):
                     display_pyvis_graph(message["subgraph_context"], f"chat_graph_{i}")
 
-# Chat input
-if user_query := st.chat_input("Ask a question about your documents..."):
+# Chat input - use the new state variable to disable the widget
+if user_query := st.chat_input("Ask a question...", disabled=st.session_state.processing):
     st.session_state.messages.append({"role": "user", "content": user_query})
-    with st.chat_message("user"):
-        st.markdown(user_query)
+    # Set processing to True and rerun to immediately disable the input
+    st.session_state.processing = True
+    st.rerun()
 
+# This block now runs only after the rerun if processing is True
+if st.session_state.processing:
+    # Get and display assistant response
     with st.chat_message("assistant"):
         with st.spinner("Thinking... (This may take a moment)"):
             try:
-                payload = {"query": user_query, "filter_filenames": selected_files or None}
+                # Get the last user query to send to the API
+                last_user_query = st.session_state.messages[-1]["content"]
+                payload = {"query": last_user_query, "filter_filenames": selected_files or None}
                 response = api_request("POST", "/query/", json=payload)
                 query_response = response.json()
 
@@ -72,10 +80,14 @@ if user_query := st.chat_input("Ask a question about your documents..."):
                     "subgraph_context": query_response.get("subgraph_context", {})
                 }
                 st.session_state.messages.append(assistant_message)
-                st.rerun()
+
             except Exception as e:
                 st.error(f"An error occurred: {e}")
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
+
+            finally:
+                # Set processing to False and rerun to re-enable the input and show the final result
+                st.session_state.processing = False
                 st.rerun()
 
 # Initial load of file list if empty

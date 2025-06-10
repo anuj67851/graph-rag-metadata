@@ -25,7 +25,7 @@ async def get_full_graph_sample(node_limit: int, edge_limit: int, filenames: Opt
     {match_clause}
     WITH n LIMIT $node_limit
     MATCH (n)-[r]-(m)
-    RETURN s, t, r
+    RETURN n, m, r
     LIMIT $edge_limit
     """
     params = {"node_limit": node_limit, "edge_limit": edge_limit, "filenames": filenames}
@@ -47,7 +47,7 @@ async def get_top_n_busiest_nodes(top_n: int = 10, filenames: Optional[List[str]
     {match_clause}
     WITH n
     WHERE n.canonical_name IS NOT NULL
-    RETURN n.canonical_name AS canonical_name, size((n)--()) AS degree
+    RETURN n.canonical_name AS canonical_name, COUNT{{(n)--()}} AS degree
     ORDER BY degree DESC
     LIMIT toInteger($top_n)
     """
