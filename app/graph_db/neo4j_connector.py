@@ -86,9 +86,10 @@ class Neo4jConnector:
         query = f"""
         MERGE (n:{entity_type} {{canonical_name: $canonical_name}})
         ON CREATE SET n = $props, n.source_document_filename = [$source_file]
-        ON MATCH SET n += {{contexts: [ctx IN n.contexts + $props.contexts WHERE ctx IS NOT NULL]}},
-                     n.original_mentions = [mention IN n.original_mentions + $props.original_mentions WHERE mention IS NOT NULL],
-                     n.source_document_filename = [file IN n.source_document_filename + $source_file WHERE file IS NOT NULL]
+        ON MATCH SET 
+            n.contexts = [ctx IN coalesce(n.contexts, []) + $props.contexts WHERE ctx IS NOT NULL],
+            n.original_mentions = [mention IN coalesce(n.original_mentions, []) + $props.original_mentions WHERE mention IS NOT NULL],
+            n.source_document_filename = [file IN coalesce(n.source_document_filename, []) + [$source_file] WHERE file IS NOT NULL]
         """
         props_for_create = {"canonical_name": canonical_name, **properties}
         params = {
@@ -109,8 +110,9 @@ class Neo4jConnector:
         MATCH (s:{s_type} {{canonical_name: $s_name}}), (t:{t_type} {{canonical_name: $t_name}})
         MERGE (s)-[r:{r_type}]->(t)
         ON CREATE SET r = $props, r.source_document_filename = [$source_file]
-        ON MATCH SET r.contexts = [ctx IN r.contexts + $props.contexts WHERE ctx IS NOT NULL],
-                     r.source_document_filename = [file IN r.source_document_filename + $source_file WHERE file IS NOT NULL]
+        ON MATCH SET 
+            r.contexts = [ctx IN coalesce(r.contexts, []) + $props.contexts WHERE ctx IS NOT NULL],
+            r.source_document_filename = [file IN coalesce(r.source_document_filename, []) + [$source_file] WHERE file IS NOT NULL]
         """
         params = {"s_name": s_name, "t_name": t_name, "props": props, "source_file": props.get("source_document_filename")}
         try:
