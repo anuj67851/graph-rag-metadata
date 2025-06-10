@@ -183,6 +183,51 @@ class WeaviateConnector:
         logger.info(f"Deleted {num_deleted} chunks from Weaviate for file '{filename}'.")
         return num_deleted
 
+    async def search_chunks_per_document(
+            self,
+            query_concepts: List[str],
+            filenames: List[str],
+            per_file_limit: int = 3
+    ) -> List[Dict[str, Any]]:
+        """
+        Performs a separate search for each specified document and returns the top
+        N chunks from each, effectively diversifying the result set.
+
+        Args:
+            query_concepts: The list of search queries.
+            filenames: The list of document filenames to search within.
+            per_file_limit: The number of top chunks to return from each document.
+
+        Returns:
+            A combined list of the top chunks from each specified document.
+        """
+        all_results = []
+        # Use a set to keep track of the text of chunks we've already added
+        # This prevents returning the exact same chunk text from different searches
+        seen_chunk_texts = set()
+
+        for filename in filenames:
+            # For each file, perform a targeted search
+            logger.info(f"Performing targeted search in file: '{filename}' for concepts: {query_concepts}")
+
+            # The search_similar_chunks method already supports filtering, so we can reuse it
+            results_for_file = await self.search_similar_chunks(
+                query_concepts=query_concepts,
+                top_k=per_file_limit,
+                filter_filenames=[filename] # Filter for just this one file
+            )
+
+            for res in results_for_file:
+                if res['chunk_text'] not in seen_chunk_texts:
+                    all_results.append(res)
+                    seen_chunk_texts.add(res['chunk_text'])
+
+        # Optionally, re-sort all collected results by score to have the best ones first
+        all_results.sort(key=lambda x: x.get('score', 0.0), reverse=True)
+
+        logger.info(f"Retrieved {len(all_results)} chunks via per-document search.")
+        return all_results
+
 # --- Singleton Management ---
 _weaviate_connector_instance: Optional[WeaviateConnector] = None
 

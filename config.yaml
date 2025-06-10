@@ -13,6 +13,9 @@ retrieval_pipeline:
   # This should be larger to accommodate results from multiple queries
   main_search_top_k: 15
 
+  # This is when multiple files are selected, 3 chunks per file are retrieved
+  per_file_chunk_limit: 3
+
   # Stage 3: Query expansion settings
   query_expansion:
     enabled: true

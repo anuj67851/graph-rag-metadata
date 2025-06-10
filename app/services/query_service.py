@@ -1,5 +1,6 @@
 import logging
 import hashlib
+from collections import defaultdict
 from typing import List, Optional
 
 from app.core.config import settings
@@ -65,11 +66,23 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     logger.info(f"Performing main search with {len(queries_for_main_search)} queries: {queries_for_main_search}")
 
     # --- Stage 3: Main Search ---
-    candidate_chunks_meta = await weaviate_conn.search_similar_chunks(
-        query_concepts=queries_for_main_search, # Weaviate can take multiple concepts
-        top_k=pipeline_config.get('main_search_top_k', 15),
-        filter_filenames=filter_filenames
-    )
+    candidate_chunks_meta = []
+    if filter_filenames:
+        # User specified files, so use the per-document retrieval strategy
+        logger.info("Using per-document retrieval strategy.")
+        candidate_chunks_meta = await weaviate_conn.search_chunks_per_document(
+            query_concepts=queries_for_main_search,
+            filenames=filter_filenames,
+            per_file_limit=pipeline_config.get('per_file_chunk_limit', 3),
+        )
+    else:
+        # No files specified, use the global retrieval strategy
+        logger.info("Using global retrieval strategy.")
+        candidate_chunks_meta = await weaviate_conn.search_similar_chunks(
+            query_concepts=queries_for_main_search,
+            top_k=pipeline_config.get('main_search_top_k', 15),
+            filter_filenames=None
+        )
     if not candidate_chunks_meta:
         logger.warning("Main search returned no candidate chunks.")
         return QueryResponse(llm_answer="Could not find any relevant information.", subgraph_context=Subgraph(), source_chunks=[])
@@ -77,18 +90,33 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     candidate_chunks = [SourceChunk(**meta) for meta in candidate_chunks_meta]
 
     # --- Stage 4: Re-ranking ---
-    final_chunks_for_context = candidate_chunks
-    if reranking_config.get('enabled'):
+    final_chunks_for_context = []
+    if not reranking_config.get('enabled'):
+        # If not enabled, just take the top N from the initial search
+        final_top_n = reranking_config.get('final_top_n', 3)
+        final_chunks_for_context = candidate_chunks[:final_top_n]
+    else:
         reranker: ReRanker = get_reranker()
-        # Add a check to ensure the reranker object was created successfully
-        if reranker:
-            final_chunks_for_context = reranker.rerank_chunks(user_query, candidate_chunks)
-        else:
-            # If the reranker failed to initialize for some reason, log it and proceed without re-ranking.
-            logger.warning("Re-ranking is enabled in config, but the reranker object could not be initialized. Skipping re-ranking step.")
-            # We must still manually trim the chunks to the final_top_n size
+        if not reranker:
+            logger.warning("Re-ranking enabled but module not initialized. Skipping.")
             final_top_n = reranking_config.get('final_top_n', 3)
             final_chunks_for_context = candidate_chunks[:final_top_n]
+        else:
+            if filter_filenames:
+                # Group candidate chunks by their source document
+                chunks_by_doc = defaultdict(list)
+                for chunk in candidate_chunks:
+                    chunks_by_doc[chunk.source_document].append(chunk)
+
+                # Re-rank within each group and collect the best chunk(s)
+                for doc_name, doc_chunks in chunks_by_doc.items():
+                    reranked_group = reranker.rerank_chunks(user_query, doc_chunks)
+                    # This could be made configurable, e.g., 'top_n_per_reranked_doc'
+                    final_chunks_for_context.extend(reranked_group[:1]) # Take the top 1 from each doc
+                logger.info(f"Re-ranked and selected top chunks from {len(chunks_by_doc)} documents.")
+            else:
+                # Global query, so re-rank the whole set together
+                final_chunks_for_context = reranker.rerank_chunks(user_query, candidate_chunks)
 
     # --- Final Context Assembly and Answer Generation ---
     if not final_chunks_for_context:

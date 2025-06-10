@@ -1,81 +1,68 @@
 import logging
+from typing import Optional, List
 
 from app.graph_db.neo4j_connector import get_neo4j_connector, Neo4jConnector
 from app.models.common_models import Subgraph
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 DEFAULT_BUSIEST_NODES_NEIGHBOR_HOP_DEPTH = 1
 
-async def get_full_graph_sample(node_limit: int, edge_limit: int) -> Subgraph:
+async def get_full_graph_sample(node_limit: int, edge_limit: int, filenames: Optional[List[str]] = None) -> Subgraph:
     """
     Retrieves a sample of the full graph using a robust query.
-    It fetches a set of edges and ensures all their source and target nodes are included.
     """
     neo4j_conn: Neo4jConnector = await get_neo4j_connector()
     logger.info(f"Fetching full graph sample (node_limit={node_limit}, edge_limit={edge_limit})")
 
-    query = """
-    MATCH (s)-[r]->(t)
-    WITH s, r, t
+    match_clause = "MATCH (n)"
+    if filenames:
+        match_clause = "MATCH (n) WHERE any(file IN n.source_document_filename WHERE file IN $filenames)"
+
+    # This query first finds a set of edges, then returns those edges
+    # along with their start and end nodes. This is a common sampling strategy.
+    query = f"""
+    {match_clause}
+    WITH n LIMIT $node_limit
+    MATCH (n)-[r]-(m)
+    RETURN s, t, r
     LIMIT $edge_limit
-    // Collect all nodes and relationships from the edge-limited sample
-    WITH collect(r) as rels, collect(s) + collect(t) as all_nodes
-    UNWIND all_nodes as node
-    WITH rels, collect(DISTINCT node) as unique_nodes
-    // Return the relationships and the limited list of unique nodes
-    RETURN rels, unique_nodes[..$node_limit] as nodes
     """
-    params = {"node_limit": node_limit, "edge_limit": edge_limit}
-    results = await neo4j_conn.execute_query(query, params)
+    params = {"node_limit": node_limit, "edge_limit": edge_limit, "filenames": filenames}
+    records = await neo4j_conn.execute_query(query, params)
 
-    if not results or not results[0].get('nodes'):
-        return Subgraph()
+    return neo4j_conn._process_records_to_subgraph(records)
 
-    # The query returns a single record with keys 'nodes' and 'rels'
-    # which contain lists of graph objects.
-    # We create a list of single-item records to pass to the robust processor.
-    record = results[0]
-    nodes_and_rels_records = record.get('nodes', []) + record.get('rels', [])
 
-    return neo4j_conn._process_subgraph_results_full_graph_sample(nodes_and_rels_records)
-async def get_top_n_busiest_nodes(top_n: int = 10) -> Subgraph:
-    """
-    Retrieves the top N busiest (most connected) nodes and their 1-hop neighborhood.
-    """
+async def get_top_n_busiest_nodes(top_n: int = 10, filenames: Optional[List[str]] = None) -> Subgraph:
     neo4j_conn: Neo4jConnector = await get_neo4j_connector()
-    logger.info(f"Fetching top {top_n} busiest nodes and their neighborhood.")
+    logger.info(f"Fetching top {top_n} busiest nodes with filters: {filenames}")
 
-    query_busiest_nodes = """
-    MATCH (n)
+    # Build the MATCH clause conditionally
+    match_clause = "MATCH (n)"
+    if filenames:
+        match_clause = "MATCH (n) WHERE any(file IN n.source_document_filename WHERE file IN $filenames)"
+
+    query_busiest_nodes = f"""
+    {match_clause}
+    WITH n
     WHERE n.canonical_name IS NOT NULL
-    RETURN
-      n.canonical_name   AS canonical_name,
-      COUNT{(n)-[]-()}          AS degree
+    RETURN n.canonical_name AS canonical_name, size((n)--()) AS degree
     ORDER BY degree DESC
     LIMIT toInteger($top_n)
     """
-    params_busiest = {"top_n": top_n}
-    busiest_nodes_results = await neo4j_conn.execute_query(query_busiest_nodes, params_busiest)
+    busiest_nodes_results = await neo4j_conn.execute_query(query_busiest_nodes, {"top_n": top_n, "filenames": filenames})
 
     if not busiest_nodes_results:
-        logger.info("No nodes found or graph is empty.")
         return Subgraph()
 
     busiest_canonical_names = [record["canonical_name"] for record in busiest_nodes_results]
-    if not busiest_canonical_names:
-        return Subgraph()
 
-    logger.info(f"Top {len(busiest_canonical_names)} busiest canonical names found: {busiest_canonical_names}")
-
-    subgraph_result = await neo4j_conn.get_subgraph_for_entities(
+    return await neo4j_conn.get_subgraph_for_entities(
         canonical_names=busiest_canonical_names,
         hop_depth=DEFAULT_BUSIEST_NODES_NEIGHBOR_HOP_DEPTH
     )
 
-    logger.info(f"Returning subgraph for busiest nodes with {len(subgraph_result.nodes)} nodes and {len(subgraph_result.edges)} edges.")
-    return subgraph_result
 async def safely_remove_file_references(filename: str):
     """
     Finds nodes/relationships referencing a file and safely removes them.

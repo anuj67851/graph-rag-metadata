@@ -1,0 +1,526 @@
+Contents
+
+Introduction 2
+About QuantumLeap Solutions 2
+NexusHub Overview 3
+The NexusHub Interface 4
+Deployment Configurations 6
+Content Ingestion 9
+Ingestion Overview 9
+The Ingestion API & Manifest Files 10
+JSON Manifest File Structure 11
+Sample JSON Manifest File 13
+Metadata and Schemas 14
+Schema Overview 14
+Metadata Fields 14
+Folder and Asset Schemas 16
+Dynamic Form Generation 19
+Version Control and Audit Trails 22
+Version Control 22
+Audit Trails 22
+Metadata History 22
+Asset Version History 23
+Asset Storage 25
+Adding Single Folders to a Workspace 28
+Search, Discovery, and Preview 29
+Universal Asset Previewer 30
+History 32
+Automated Workflows 33
+Designing a Workflow 33
+Workflow Engine Features 33
+Governance and Security 39
+Security Overview 39
+Permission Policies 39
+System-Level Policies 39
+Roles 41
+Platform Administrator Logon 42
+Event Webhooks 43
+Integrations & Extensibility 45
+NexusHub Technical Specifications 46
+
+Trademark Notices
+
+NexusHub and the NexusHub logo are trademarks of QuantumLeap Solutions Inc.
+
+Amazon Web Services, S3, and the AWS logo are registered trademarks of Amazon.com, Inc. or its affiliates.
+
+Microsoft Azure, Azure Blob Storage, and the Microsoft logo are either registered trademarks or trademarks of Microsoft Corporation in the United States and/or other countries.
+
+All other third-party products mentioned in this document are trademarks of their respective companies.
+
+Introduction
+
+This document provides a comprehensive overview of NexusHub, the cloud-native Digital Asset Management (DAM) and Collaborative Workflow platform designed for modern enterprises. DAM and workflow systems are critical for organizations to effectively manage the lifecycle of digital content—from creation and review to distribution and archival. NexusHub empowers your teams to enhance collaboration, secure digital assets, automate repetitive tasks, and maintain brand consistency across all channels.
+
+NexusHub is a revolutionary platform built entirely on a modern, API-first architecture. It leverages cutting-edge cloud technologies to deliver unparalleled performance and scalability at a predictable operational cost. NexusHub is designed to operate as a secure, multi-tenant cloud service, with client access through any modern web browser. There is no client-side software to install, and assets can be previewed using the Universal Previewer without needing native applications on user workstations. Despite being a web-based application, the user experience is fast, responsive, and highly intuitive.
+
+NexusHub is engineered to support any content-driven process, including Marketing Campaign Management, Product Design Cycles, Media Production, Brand Management, Engineering Documentation, Legal Contract Management, and Corporate Communications. Pre-configured schemas and workflow templates are available for numerous applications and can be easily customized by business users without IT intervention.
+
+About QuantumLeap Solutions
+
+QuantumLeap Solutions Inc. is a visionary software company specializing in cloud-native solutions for enterprise content and process management. Established in 2015, QuantumLeap serves a diverse portfolio of forward-thinking customers, from agile startups to Fortune 500 companies. NexusHub support and professional services are available globally through our certified partner network.
+
+Overview
+
+NexusHub is a Digital Asset Management and Collaborative Workflow platform that enables organizations to control the entire lifecycle of their digital content. It provides the following major features:
+
+• Ingest – Digital assets are ingested via a powerful API, drag-and-drop web interface, or monitored cloud storage folders, either individually or in bulk. During ingestion, AI-powered services can automatically generate tags and extract metadata.
+• Organize – Assets are indexed using configurable schemas and organized into collaborative Workspaces.
+• Collaborate – Asset revisions are managed through a check-in/check-out process, and real-time annotations are stored as non-destructive overlays.
+• Version Control – A complete history of asset versions is automatically tracked and maintained.
+• Storage – Assets are securely stored in enterprise-grade cloud object storage, such as Amazon S3 or Azure Blob Storage.
+• Discover – Assets and folders are found through powerful metadata search and filtering.
+• Content Search – Advanced search engine technology allows users to instantly find assets based on extracted text and AI-generated tags.
+• Preview – A rich, universal previewer for hundreds of file formats.
+• Security
+o Authentication is handled via internal credentials or integrated with external providers like SAML 2.0, OpenID Connect, and LDAP/Active Directory.
+o Authorization is managed through a flexible Role-Based Access Control (RBAC) model to govern access and actions on all assets and workspaces.
+• Extensibility – Integrate with external systems via a comprehensive REST API and event-driven webhooks.
+• Utilities – System administration, shareable links, content transformation, reporting, and analytics.
+
+NexusHub provides a single source of truth for all current and archived digital assets, accessible to authorized users from anywhere. Assets can be ingested in bulk from various sources using the NexusHub API and manifest files. Individual assets can also be easily uploaded by any user with the appropriate permissions. NexusHub offers complete metadata management capabilities, including the ability to define unlimited custom fields (metadata) for asset and folder schemas.
+
+NexusHub empowers users to search for assets and workspaces, preview and collaborate on them under strict version control, and manage their lifecycle. Assets can be located using any combination of metadata fields defined in their schemas, as well as by their filename, content, or AI-generated tags.
+
+Asset modification requires a user to "check out" the asset, which locks it from modification by others. A complete revision history is tracked for every action, including who performed the action and when.
+
+Security is provided through internal authentication or integration with enterprise identity providers. Authorization is maintained over all assets and workspaces through a powerful RBAC model that maps granular Permission Policies to Roles. This provides complete control over who can view, download, edit, delete, and manage assets.
+
+NexusHub features a state-of-the-art Universal Asset Previewer for rendering a vast array of formats, including Adobe Creative Cloud files (PSD, AI), Office documents, 3D models, video, audio, CAD files, and more, all within the browser.
+
+• High-performance rendering and thumbnail generation for all asset types.
+• Advanced video playback controls and frame-by-frame scrubbing.
+• Extensive annotation tools with commenting and status tracking.
+• Image adjustment tools (zoom, pan, rotate).
+• Side-by-side version comparison.
+• Secure, expiring share links for external collaboration.
+• Detachable previewer window and metadata panel.
+• Local download of original or converted renditions.
+• Advanced navigation and keyboard shortcuts.
+
+The NexusHub Interface
+After a user logs into NexusHub, their personalized dashboard provides access to recent assets, assigned tasks, and workspaces they are a member of.
+
+[Screenshot of the NexusHub Dashboard, showing Workspaces, Recent Files, and a Task List]
+
+Clicking on an asset opens the detail view, displaying the asset preview, its metadata, version history, and collaboration tools in a single, streamlined interface.
+
+[Screenshot of the NexusHub Asset Detail View, showing a preview, metadata panel, and activity feed]
+
+Configurations
+
+The NexusHub Platform features:
+• Cloud-native, containerized architecture (Docker & Kubernetes).
+• Microservices-based design for scalability and resilience.
+• Multiple cloud provider and private cloud support.
+• Multi-processor and auto-scaling support.
+• Web-based platform administration.
+• Integration with enterprise identity providers (SAML, OIDC, LDAP).
+• Flexible RBAC security model.
+
+NexusHub can be configured for teams of any size, from small creative groups to global enterprises. The following diagrams illustrate common deployment models.
+
+Content Ingestion
+
+Ingestion Overview
+
+Content Ingestion is the process of getting digital assets into the NexusHub platform. NexusHub can ingest assets from a wide variety of sources:
+
+ Bulk API Ingestion: Use the REST API with JSON manifest files to programmatically import large volumes of assets and their associated metadata.
+ Web Uploader: Drag and drop files and folders directly into the browser for quick and easy uploads.
+ Monitored Folders: Configure NexusHub to automatically watch a cloud storage location (e.g., an S3 bucket) and ingest any new content that appears.
+ Connectors: Use pre-built integrations to pull assets directly from other systems, such as PIM, ERP, or other cloud drives.
+
+When assets are ingested, they are stored in the NexusHub repository, and automatically profiled using Workspaces, Schemas, and Metadata. AI services can also be triggered to perform tasks like auto-tagging, transcription, and object recognition.
+
+The Ingestion API & Manifest Files
+
+The NexusHub Ingestion Service is a core API endpoint that is always available to receive ingestion requests. It is designed to handle high-volume, concurrent uploads. To configure automated ingestion jobs, you use the Platform Administration tools to create API keys and define ingestion workflows.
+
+An ingestion request consists of a JSON manifest file and the corresponding asset files.
+
+[Screenshot of the NexusHub API Key Management screen in the Admin Panel]
+
+JSON Manifest File Structure
+
+This section describes the JSON manifest file used to import assets and folders into the NexusHub system. The JSON object has the following key properties:
+
+Key	Type	Description
+manifestVersion	String	The version of the manifest schema. Currently "1.0".
+workspace	String	The name or ID of the target workspace for the assets.
+policy	String	The action to take if an asset already exists. "CREATE_NEW_VERSION", "REPLACE", or "SKIP".
+assets	Array	An array of asset objects to be imported.
+assets.filename	String	The name of the asset file being imported.
+assets.schema	String	The name of the Asset Schema to apply.
+assets.path	String	(Optional) The target folder path within the workspace.
+assets.metadata	Object	A key-value map of metadata fields to populate.
+assets.metadata.{fieldName}	String/Number/Boolean	The value for the specified metadata field. Must match the schema's field type.
+
+A sample JSON manifest file looks as follows:
+
+{
+  "manifestVersion": "1.0",
+  "workspace": "Q4 Marketing Campaign",
+  "policy": "CREATE_NEW_VERSION",
+  "assets": [
+    {
+      "filename": "Product_Shot_01.jpg",
+      "schema": "Product Photography",
+      "path": "/Images/Lifestyle",
+      "metadata": {
+        "ProductID": "SKU-12345",
+        "Photographer": "Jane Doe",
+        "ShootDate": "2023-10-26T10:00:00Z",
+        "UsageRights": "Web and Print - 12 Months",
+        "IsApproved": true
+      }
+    },
+    {
+      "filename": "Campaign_Brief.pdf",
+      "schema": "Marketing Document",
+      "metadata": {
+        "Author": "John Smith",
+        "Status": "Final",
+        "CampaignCode": "Q4-FALL-SALE"
+      }
+    }
+  ]
+}
+
+
+N2 Profile – Templates and Attributes --> NexusHub Metadata and Schemas
+
+Schema Overview
+
+A NexusHub Schema allows you to define the structure and metadata for your content. It acts as a blueprint for classifying assets and ensuring data consistency. NexusHub uses:
+
+ Folder Schemas
+ Asset Schemas
+ Metadata Fields
+
+Metadata Fields are the individual pieces of information (like "Author" or "Product ID") that you want to track. Asset Schemas define the types of assets in your system (e.g., "Product Image," "Video Ad," "Legal Contract"), while Folder Schemas define the types of folders or containers. This structured approach allows you to organize your digital assets in a way that aligns perfectly with your business processes.
+
+Schemas and Metadata Fields are defined by a Platform Administrator or a Workspace Manager from the Governance settings menu.
+
+Metadata Fields
+
+A Metadata Field defines the properties of the data you want to capture for an asset or folder. These field values are displayed on the asset detail page and are used for searching and filtering. Fields can hold various data types such as Text, Number, Boolean (Yes/No), DateTime, and Controlled Vocabulary (a predefined list of options).
+
+A metadata field holds the following information:
+
+• DataType - The type of data (Text, Number, Boolean, DateTime, Controlled Vocabulary).
+• Name - The unique system name for the field (e.g., productID).
+• Label - The user-friendly label displayed in the interface (e.g., Product ID).
+• Description - A brief help text description for the field.
+• IsRequired - Whether the field must be filled out.
+• IsSearchable - Whether the field's content should be indexed for search.
+• ControlledVocabulary - For this data type, a list of allowed values (e.g., Status - Draft;In Review;Approved;Archived). This creates a dropdown menu for users.
+
+The metadata field editor provides the following features:
+
+• Click Create New Field to define a new metadata field.
+• Click the Edit icon to modify an existing field.
+• Click the Delete icon to remove a field. Note that fields currently used in a schema cannot be deleted.
+
+The following shows the creation of a new Metadata Field for "Usage Rights":
+
+[Screenshot of the "Create New Metadata Field" modal window]
+
+Press the Create Field button to complete.
+
+Folder and Asset Schemas
+
+A Schema is a template for a specific type of Folder or Asset in the system. It allows you to group related metadata fields together to describe your content. A schema consists of the following information:
+
+ Schema Type – Folder or Asset.
+ Schema Name – A descriptive name for the schema (e.g., "Product Photography").
+ Schema Description – A longer description of its purpose.
+ Versioning – Whether to enable version control for assets using this schema.
+ Default Storage Policy – The cloud storage tier for assets created with this schema.
+ Default Permission Policy – The baseline permissions that should apply to assets of this type.
+
+The following shows an example of a Schema for a "Contract" asset:
+
+[Screenshot of the "Contract" Schema definition page, listing its name, description, and associated metadata fields]
+
+Once you have defined both Schemas and Metadata Fields, you can assign the Fields to the Schemas using a drag-and-drop interface.
+
+[Screenshot of the Schema editor, showing a list of available Metadata Fields on the left and the fields assigned to the "Contract" schema on the right]
+
+Metadata Fields can be shared across multiple schemas, so common fields like "Status" or "Owner" do not need to be recreated for every asset type. Once a schema is fully defined, it generates a user-friendly form for editing metadata.
+
+Dynamic Form Generation
+
+Creating a new asset from a schema with dynamic form generation.
+
+Select a Workspace → Click the Add Asset button → Choose a Schema (e.g., "Social Media Post").
+
+[Screenshot of a dynamically generated form based on the "Social Media Post" schema, with fields for "Campaign," "Platform," "Publish Date," and "Approval Status"]
+
+The system automatically generates an intuitive form based on the schema's configuration. After filling in the metadata and uploading the file, the asset is created in NexusHub with all the specified metadata, ready for collaboration and workflow.
+
+Version Control and Audit Trails
+
+Version Control
+
+NexusHub can maintain a complete version history for any asset. You may preview an asset without creating a new version. To modify an asset, you must Check Out the asset. A checked-out asset is locked and can only be modified by the user who checked it out, preventing conflicting edits. Other users can still view the last checked-in version.
+
+To save changes, the user must Check In the asset and upload the new file. If the changes are not to be saved, the user can simply Undo Checkout.
+
+When an asset is checked in, a new version is created with a sequential version number (e.g., v2, v3). The initial upload is v1.
+
+Audit Trails
+
+A complete, immutable audit trail is logged in the NexusHub database for every object. There are two primary types of history:
+
+Metadata History (for assets and folders)
+
+Version History (for versioned assets only)
+
+Metadata History
+
+Press the Activity tab next to any asset or folder to display its history. The activity feed shows when any metadata was created or changed. It shows:
+
+• Field name
+• Previous value
+• New value
+• Modified by (User)
+• Date and time of modification
+
+Asset Version History
+
+NexusHub maintains a history record for every version of an asset. When an asset is created, the history is created for v1 of the asset.
+
+When you check in a revised asset, you are prompted to provide a Version Comment describing the changes:
+
+[Screenshot of the "Check In Asset" modal, with a text area for "Version Comments"]
+
+This comment is recorded in the Version History. The Version History is available by pressing the Versions tab. It shows:
+
+• Version Number
+• Version Comment
+• Modified by (User)
+• Date and time of check-in
+
+An example is shown below:
+
+[Screenshot of the Version History tab, showing a list of versions (v1, v2, v3) with user, date, and comments for each]
+
+Asset Storage
+
+All NexusHub Folder and Asset objects are stored in Repositories. The native NexusHub repository uses enterprise-grade cloud object storage, such as Amazon S3 or Microsoft Azure Blob Storage. It is also possible to connect to on-premise S3-compatible storage systems.
+
+Repositories are configured by the Platform Administrator. A repository definition includes its name, cloud provider, bucket/container name, credentials, and storage class/tier information.
+
+Direct user access to the underlying storage is prohibited. Users can only access assets through the NexusHub application, ensuring that all security, permission, and audit policies are enforced.
+
+All assets added to NexusHub may use either the web uploader for single assets, or for bulk operations, the Ingestion API as described earlier in this document. The ingestion process stores the physical file in the configured repository and updates the NexusHub database with the asset's metadata and location.
+
+To add a single asset to the system, navigate to a Workspace and press the Add Asset button.
+
+[Screenshot of the Workspace view with the "Add Asset" button highlighted]
+
+Select the appropriate schema and browse to the file you wish to upload. Press the Upload button to add the asset. The system will then display the asset's detail page so that metadata can be entered.
+
+[Screenshot of the metadata editing form after a new asset has been uploaded]
+
+Adding Single Folders to a Workspace
+
+To add a new Folder, press the Create Folder button within a Workspace. The Folder creation panel is displayed. Here you can apply a folder schema, add metadata to the folder, and immediately begin adding assets into it.
+
+Search, Discovery, and Preview
+
+The NexusHub client application provides access to all folder and asset objects in the system.
+
+Assets or Folders are accessed for retrieval and viewing via the Search function. This is invoked by using the global search bar or by applying filters within a Workspace.
+
+[Screenshot of the NexusHub search interface, showing a search bar and advanced filter options for metadata, file type, date, etc.]
+
+Universal Asset Previewer
+NexusHub features a Universal Asset Previewer, a powerful system for rendering a wide variety of file formats directly in the browser, including:
+
+• Adobe Creative Cloud (PSD, AI, INDD)
+• Microsoft Office Suite (DOCX, XLSX, PPTX)
+• Video and Audio (MP4, MOV, MP3, WAV)
+• Images (JPEG, PNG, TIFF, WEBP, HEIC)
+• 3D Models (GLB, OBJ)
+• PDF Documents
+• CAD Drawings (DWG, DXF)
+• Plain Text and Code (TXT, HTML, CSS, JS)
+
+[Screenshot of the Universal Asset Previewer showing a video file with playback controls and an annotation sidebar]
+
+NexusHub maintains a complete audit trail of all activity against a repository object through the history function. History shows when the object was created or modified and what attributes got changed by who and when. The information is maintained by NexusHub and cannot be edited.
+
+Click on the history icon to open the history for the given document in a new window.
+
+Automated Workflows
+
+NexusHub enables you to re-engineer business processes to achieve significant gains in productivity, efficiency, and quality control. Workflows allow an organization to define and automate business processes by describing the sequence of tasks, the responsible parties, the required actions, and the expected timelines.
+
+Using NexusHub, a workflow map can be designed visually and published to a workspace. Users can then initiate workflows on assets, and at each step, assigned users are notified to perform tasks, such as reviewing content, providing feedback, or giving final approval.
+
+Designing a Workflow
+
+Business processes are designed in the visual Workflow Designer. Based on the activities in the process, you can define routing rules, conditional logic, user assignments, and notifications. The workflow is saved as a reusable template.
+
+After designing the process, the workflow template is published. It can then be associated with specific schemas, ensuring that, for example, all new "Press Release" assets automatically enter the "PR Approval" workflow.
+
+Workflow Engine Features
+
+The workflow engine allows users to initiate, participate in, and track the progress of automated processes.
+
+[Screenshot of a user's "My Tasks" inbox, showing a list of workflow items requiring their attention]
+
+To review the status of any workflow, users can access the visual workflow history, which shows the complete path of the asset from start to finish, including who performed what action at each step and when.
+
+[Screenshot of a visual workflow history, showing a flowchart of the process with completed steps highlighted in green and the current step in blue]
+
+Governance and Security
+
+Security Overview
+
+Asset security and access control are fundamental to NexusHub, restricting system functionality and content access to authorized users and roles. This is achieved through the following methods:
+
+Authentication – Users are authenticated via their NexusHub credentials or through an integrated enterprise Identity Provider (e.g., Okta, Azure AD, Google Workspace) using standards like SAML 2.0 or OIDC.
+
+Authorization – NexusHub maintains a list of authorized users and their assigned Roles. A user can have one or more roles. Roles grant permissions based on one or more assigned Permission Policies.
+
+Permission Policies
+NexusHub uses Permission Policies to control access to every object and function in the system (Assets, Workspaces, Schemas, Admin Utilities). A user cannot perform any action for which they have not been granted explicit permission.
+
+Permission is granted to a user by associating their Role with a Policy that governs that object or action. Policies contain granular permissions, such as:
+
+asset:read – Required to view or preview an asset.
+asset:download – Required to download the original asset file.
+asset:create – Required to upload a new asset.
+asset:update – Required to edit an asset's metadata or check in a new version.
+asset:delete – Required to delete an asset.
+workspace:admin – Required to manage a workspace's members and settings.
+
+Policies are defined using a simple JSON structure and can be created and assigned by administrators.
+
+System-Level Policies
+
+System-level policies are built-in and cannot be changed. The PlatformAdmin policy grants all permissions across the entire system.
+
+The Platform Admin Role is a system-defined role assigned to the initial administrator user. The PlatformAdmin policy is assigned to this role by default and this assignment cannot be removed.
+
+To create new policies, navigate to Administration > Security > Policies.
+
+[Screenshot of the Permission Policy editor, showing a policy being constructed with various permissions]
+
+Roles
+To manage Roles, navigate to Administration > Security > Roles. The role management screen lists all existing roles in the system.
+
+• The roles screen lists all roles and the users assigned to each role.
+• Enter a role name and click Create Role to add a new role.
+• Click the Delete icon to remove a role from the system.
+• The section below shows how to configure an existing role.
+• The left list box shows the users currently assigned to the selected role.
+• The right list box shows all other users in the system.
+• Use the arrow icons to add or remove users from the role.
+• Note that the "Platform Admin" role and its primary user cannot be modified.
+
+[Screenshot of the Role Management screen, showing users being assigned to a "Marketing Team" role]
+
+Platform Administrator Logon
+
+The primary platform administrator user is created during the initial setup of the NexusHub instance. By default, this user is assigned the Platform Admin role and the PlatformAdmin policy. This user has full control over the system. It is critical to secure this account with a strong password and multi-factor authentication immediately after installation.
+
+[Screenshot of the NexusHub login screen]
+
+Event Webhooks
+This utility is used to subscribe to system events and send notifications to external services. This is a core part of integrating NexusHub into a broader ecosystem.
+Navigate to the Webhooks screen by clicking "Webhooks" within the "Administration > Integrations" menu.
+
+• Event Trigger – Select the system event to subscribe to (e.g., asset.created, asset.version.checkedin, workflow.step.completed).
+• Payload URL – The endpoint URL of the external service that will receive the event notification.
+• HTTP Method – The HTTP method to use (e.g., POST).
+• Secret – A secret key used to sign the request, allowing the receiving service to verify its authenticity.
+• Save – Save the webhook configuration.
+
+Scroll down the screen to see a list of all configured webhooks. These can be enabled, disabled, or deleted.
+
+Integrations & Extensibility
+
+NexusHub is designed with an API-first philosophy, allowing for deep integration with your existing technology stack. For example, a marketing automation platform can use the NexusHub API to automatically pull the latest approved images for an email campaign, ensuring brand consistency.
+
+Other integration methods include:
+
+• Comprehensive REST API for all platform functions.
+• Event-driven Webhooks for real-time notifications to external systems.
+• A growing marketplace of pre-built connectors for popular platforms like Slack, Microsoft Teams, Adobe Creative Cloud, Figma, and more.
+• Customizable IFRAME widgets for embedding NexusHub functionality into other web applications.
+• Python and JavaScript SDKs to accelerate custom development.
+
+NexusHub Technical Specifications
+
+NexusHub is developed with the following technical features:
+
+• Cloud-native microservices architecture.
+• Backend developed in Go and Python for performance and scalability.
+• Frontend developed using React for a modern, responsive user experience.
+• Uses PostgreSQL or a compatible database for metadata storage.
+• Uses Elasticsearch for advanced search and discovery.
+• Runs on container orchestration platforms like Kubernetes.
+• Web-based platform administration.
+• Authentication via OpenID Connect (OIDC) and SAML 2.0.
+• Flexible Role-Based Access Control (RBAC) authorization model.
+
+NexusHub Server Environment (Self-Hosted)
+
+Minimum requirements for a self-hosted NexusHub environment:
+
+• A Kubernetes cluster (v1.21+).
+• S3-compatible object storage.
+• PostgreSQL database (v13+).
+• Elasticsearch instance (v7.10+).
+• Sufficient CPU/RAM/Storage resources, which vary based on user load and asset volume.
+
+NexusHub Client Requirements
+
+Requirements for the NexusHub client are as follows:
+
+• A modern, evergreen web browser (Chrome, Firefox, Safari, Edge).
+• A stable internet connection.
+
+NexusHub Overview
+
+NexusHub is a Digital Asset Management and Collaborative Workflow platform that enables organizations to control the entire lifecycle of their digital content. It provides the following major features:
+
+• Ingest – Digital assets are ingested via a powerful API, drag-and-drop web interface, or monitored cloud storage folders, either individually or in bulk. During ingestion, AI-powered services can automatically generate tags and extract metadata.
+• Organize – Assets are indexed using configurable schemas and organized into collaborative Workspaces.
+• Collaborate – Asset revisions are managed through a check-in/check-out process, and real-time annotations are stored as non-destructive overlays.
+• Version Control – A complete history of asset versions is automatically tracked and maintained.
+• Storage – Assets are securely stored in enterprise-grade cloud object storage, such as Amazon S3 or Azure Blob Storage.
+• Discover – Assets and folders are found through powerful metadata search and filtering.
+• Content Search – Advanced search engine technology allows users to instantly find assets based on extracted text and AI-generated tags.
+• Preview – A rich, universal previewer for hundreds of file formats.
+• Security
+o Authentication is handled via internal credentials or integrated with external providers like SAML 2.0, OpenID Connect, and LDAP/Active Directory.
+o Authorization is managed through a flexible Role-Based Access Control (RBAC) model to govern access and actions on all assets and workspaces.
+• Extensibility – Integrate with external systems via a comprehensive REST API and event-driven webhooks.
+• Utilities – System administration, shareable links, content transformation, reporting, and analytics.
+• AI Content Moderation: Automatically flag assets for review based on configurable content safety policies.
+• Figma & Sketch Integration: Directly sync design assets from Figma and Sketch, maintaining a link to the source file.
+
+NexusHub provides a single source of truth for all current and archived digital assets, accessible to authorized users from anywhere. Assets can be ingested in bulk from various sources using the NexusHub API and manifest files. Individual assets can also be easily uploaded by any user with the appropriate permissions. NexusHub offers complete metadata management capabilities, including the ability to define unlimited custom fields (metadata) for asset and folder schemas.
+
+NexusHub empowers users to search for assets and workspaces, preview and collaborate on them under strict version control, and manage their lifecycle. Assets can be located using any combination of metadata fields defined in their schemas, as well as by their filename, content, or AI-generated tags.
+
+Asset modification requires a user to "check out" the asset, which locks it from modification by others. A complete revision history is tracked for every action, including who performed the action and when.
+
+Security is provided through internal authentication or integration with enterprise identity providers. Authorization is maintained over all assets and workspaces through a powerful RBAC model that maps granular Permission Policies to Roles. This provides complete control over who can view, download, edit, delete, and manage assets.
+
+NexusHub features a state-of-the-art Universal Asset Previewer for rendering a vast array of formats, including Adobe Creative Cloud files (PSD, AI), Office documents, 3D models, video, audio, CAD files, and more, all within the browser.
+
+• High-performance rendering and thumbnail generation for all asset types.
+• Advanced video playback controls and frame-by-frame scrubbing.
+• Extensive annotation tools with commenting and status tracking.
+• Image adjustment tools (zoom, pan, rotate).
+• Side-by-side version comparison.
+• Secure, expiring share links for external collaboration.
+• Detachable previewer window and metadata panel.
+• Local download of original or converted renditions.
+• Advanced navigation and keyboard shortcuts.
