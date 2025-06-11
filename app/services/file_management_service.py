@@ -2,7 +2,7 @@ import logging
 import os
 import zipfile
 from io import BytesIO
-from typing import List
+from typing import List, Any, Coroutine
 
 from app.database.sqlite_connector import get_sqlite_connector
 from app.vector_store.weaviate_connector import get_weaviate_connector
@@ -17,7 +17,7 @@ async def list_all_documents() -> List[dict]:
     return sqlite_conn.list_all_files()
 
 
-async def get_document_record(filename: str) -> dict:
+async def get_document_record(filename: str) -> dict[str, Any] | None:
     """Retrieves a single file record and checks for physical file existence."""
     sqlite_conn = get_sqlite_connector()
     record = sqlite_conn.get_file_record(filename)

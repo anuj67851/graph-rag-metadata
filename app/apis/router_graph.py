@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, List, Dict
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query
 from app.models.common_models import Subgraph
 from app.core.config import settings
 from app.services.graph_service import (
