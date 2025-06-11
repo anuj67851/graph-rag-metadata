@@ -57,8 +57,8 @@ The system is built with a modular, highly configurable, and scalable architectu
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd <your-repository-name>
+git clone https://github.com/anuj67851/graph-rag-metadata.git
+cd graph-rag-metadata
 ```
 
 ### 2. Configure Environment Variables
