@@ -1,3 +1,5 @@
+import time
+
 import streamlit as st
 import pandas as pd
 from io import BytesIO
@@ -56,20 +58,61 @@ else:
     df = df[['filename', 'ingestion_status', 'ingested_at', 'filesize', 'chunk_count', 'entities_added', 'relationships_added', 'error_message']]
     st.dataframe(df, use_container_width=True)
 
-    # --- File Deletion ---
     st.markdown("---")
-    st.subheader("Manage Documents")
-    files_to_delete = st.multiselect(
-        "Select documents to delete",
-        options=[f['filename'] for f in st.session_state.file_data]
-    )
-    if st.button("Delete Selected Documents", disabled=not files_to_delete, type="primary"):
-        for filename in files_to_delete:
-            with st.spinner(f"Deleting '{filename}' and its associated data..."):
-                try:
-                    api_request("DELETE", f"/ingest/documents/{filename}")
-                    st.success(f"Successfully initiated deletion for '{filename}'.")
-                except Exception as e:
-                    st.error(f"Failed to delete '{filename}': {e}")
-        # Refresh the list after deletion
-        refresh_file_list()
+    st.subheader("Document Actions")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("##### Download Documents")
+        files_to_download = st.multiselect(
+            "Select documents to download as a ZIP file",
+            options=[f['filename'] for f in st.session_state.file_data],
+            key="download_multiselect"
+        )
+
+        # We don't show the button until files are selected
+        if files_to_download:
+            # Prepare the data for the POST request
+            payload = {"filenames": files_to_download}
+            try:
+                # We "prepare" the download by calling the API.
+                # The actual download happens when the user clicks the st.download_button
+                response = api_request("POST", "/ingest/documents/download/batch", json=payload)
+
+                # Get the filename from the response headers if available, otherwise create one
+                zip_filename = f"GraphRAG_Export_{int(time.time())}.zip"
+
+                st.download_button(
+                    label=f"Download Selected ({len(files_to_download)}) as ZIP",
+                    data=response.content,
+                    file_name=zip_filename,
+                    mime='application/zip'
+                )
+            except Exception as e:
+                st.error(f"Could not prepare ZIP file for download: {e}")
+
+    with col2:
+        # Action: Delete
+        st.markdown("##### Delete Documents")
+        files_to_delete = st.multiselect(
+            "Select documents to permanently delete",
+            options=[f['filename'] for f in st.session_state.file_data],
+            key="delete_multiselect"
+        )
+        if files_to_delete:
+            if st.button("Delete Selected Documents", type="primary"):
+                for filename in files_to_delete:
+                    with st.spinner(f"Deleting '{filename}' and all its associated data..."):
+                        try:
+                            api_request("DELETE", f"/ingest/documents/{filename}")
+                            st.success(f"Successfully initiated deletion for '{filename}'.")
+                        except Exception as e:
+                            st.error(f"Failed to delete '{filename}': {e}")
+                # Refresh the list after deletion
+                refresh_file_list()
+                st.rerun()
+
+# Initial load of file list if it's empty
+if not st.session_state.file_data:
+    refresh_file_list()

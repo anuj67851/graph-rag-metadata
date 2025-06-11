@@ -1,10 +1,15 @@
 import logging
 import os
 import shutil
+import zipfile
+import time
+from io import BytesIO
 from typing import List
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, BackgroundTasks
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from starlette.responses import StreamingResponse
 
 from app.core.config import settings
 from app.services.ingestion_service import process_document_for_ingestion
@@ -127,3 +132,42 @@ async def delete_ingested_file(filename: str, background_tasks: BackgroundTasks)
     sqlite_conn.delete_file_record(filename)
 
     return {"detail": f"Successfully initiated deletion of file '{filename}' and all its associated data."}
+
+class FileDownloadRequest(BaseModel):
+    filenames: List[str]
+
+@router.post("/documents/download/batch", response_class=StreamingResponse)
+async def download_files_as_zip(request: FileDownloadRequest):
+    """
+    Accepts a list of filenames, creates a ZIP archive of them in memory,
+    and returns it for download.
+    """
+    filenames = request.filenames
+    if not filenames:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No filenames provided.")
+
+    sqlite_conn = get_sqlite_connector()
+
+    # Create an in-memory binary stream to hold the zip file
+    zip_io = BytesIO()
+
+    with zipfile.ZipFile(zip_io, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for filename in filenames:
+            record = sqlite_conn.get_file_record(filename)
+            if record and os.path.exists(record['filepath']):
+                # Add the file to the zip archive using its base name
+                zipf.write(record['filepath'], arcname=filename)
+            else:
+                logger.warning(f"File '{filename}' not found in storage for zipping. Skipping.")
+
+    # Rewind the stream to the beginning
+    zip_io.seek(0)
+
+    # Create a unique filename for the zip archive
+    zip_filename = f"GraphRAG_Documents_{int(time.time())}.zip"
+
+    return StreamingResponse(
+        iter([zip_io.getvalue()]),
+        media_type="application/x-zip-compressed",
+        headers={"Content-Disposition": f"attachment; filename={zip_filename}"}
+    )
