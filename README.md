@@ -1,18 +1,10 @@
-Of course. A great `README.md` is the front door to your project. It's crucial that it's clear, comprehensive, and reflects all the powerful features you've built.
-
-I have taken your existing `README.md` and expanded it significantly to include all the new API endpoints and features, while also restructuring it for better readability. I've added a detailed API Endpoints section, improved the "Getting Started" instructions, and added a section on the project's architecture.
-
-Here is the new, more comprehensive `README.md` file.
-
----
-
 # 🧠 Graph RAG: Advanced Knowledge Management System
 
 This project is a sophisticated, production-ready Retrieval Augmented Generation (RAG) system designed for advanced knowledge management. It leverages a hybrid approach, combining the power of a **Vector Database** for semantic search and a **Graph Database** for understanding complex relationships within unstructured documents.
 
 The system is built with a modular, highly configurable, and scalable architecture using FastAPI for the backend and Streamlit for the user interface. It is not just a simple RAG pipeline; it's a complete platform for building, managing, querying, and exploring a knowledge base derived from your documents.
 
-[![API Docs](https://img.shields.io/badge/API-Documentation-blue?style=for-the-badge&logo=fastapi)](http://localhost:8000/docs)
+[![API Docs Swagger](https://img.shields.io/badge/API-Documentation-blue?style=for-the-badge&logo=fastapi)](http://localhost:8000/docs)
 [![Neo4j Browser](https://img.shields.io/badge/Neo4j-Browser-008cc1?style=for-the-badge&logo=neo4j)](http://localhost:7474)
 
 ---
