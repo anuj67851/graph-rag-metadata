@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import Union, IO
 
 import PyPDF2
+from PyPDF2 import errors
 import docx
 from markdown import markdown
 from bs4 import BeautifulSoup # To strip HTML from markdown conversion
@@ -180,76 +181,3 @@ def extract_text_from_file(filename: str, file_content: Union[bytes, IO[bytes]])
         return parse_markdown(file_content)
     else:
         raise ValueError(f"Unsupported file type: {extension}. Supported types are .txt, .pdf, .docx, .md.")
-
-
-if __name__ == "__main__":
-    # Create dummy files for testing
-    # Ensure this script is run from the 'graph_rag_app' root or adjust paths.
-    # For simplicity, we'll create content in memory.
-
-    # --- Test TXT ---
-    print("--- Testing TXT ---")
-    txt_content_bytes = "This is a simple text file.\nIt has two lines.".encode('utf-8')
-    try:
-        txt_text = extract_text_from_file("sample.txt", txt_content_bytes)
-        print("TXT Parsed:\n", txt_text)
-    except (ValueError, FileParsingError) as e:
-        print(f"Error parsing TXT: {e}")
-
-    # --- Test Markdown ---
-    print("\n--- Testing Markdown ---")
-    md_content_bytes = "# Title\n\nThis is **bold** and *italic*.\n\n- Item 1\n- Item 2".encode('utf-8')
-    try:
-        md_text = extract_text_from_file("sample.md", md_content_bytes)
-        print("Markdown Parsed (Plain Text):\n", md_text)
-    except (ValueError, FileParsingError) as e:
-        print(f"Error parsing Markdown: {e}")
-
-    # --- Test DOCX (requires creating a dummy DOCX in memory or on disk) ---
-    # This is more complex to create purely in memory without saving.
-    # For a quick test, you might manually create a 'dummy.docx' and load it.
-    print("\n--- Testing DOCX (manual dummy file needed or skip) ---")
-    try:
-        # Create a dummy docx in memory
-        from docx import Document as DocxDocument
-        doc = DocxDocument()
-        doc.add_paragraph("Hello, this is a test DOCX paragraph.")
-        doc.add_paragraph("Another paragraph for testing.")
-        docx_io = BytesIO()
-        doc.save(docx_io)
-        docx_io.seek(0)
-        docx_text = extract_text_from_file("dummy.docx", docx_io)
-        print("DOCX Parsed:\n", docx_text)
-    except ImportError:
-        print("Skipping DOCX test: python-docx not fully available for in-memory creation or import issue.")
-    except (ValueError, FileParsingError) as e:
-        print(f"Error parsing DOCX: {e}")
-
-
-    # --- Test PDF (requires creating a dummy PDF in memory or on disk) ---
-    # Creating a valid PDF programmatically is non-trivial without external libraries like reportlab.
-    # This test will likely be more effective with an actual small PDF file.
-    print("\n--- Testing PDF (manual dummy file recommended or skip) ---")
-    print("Note: Programmatic PDF creation is complex. Test with a real small PDF if possible.")
-    # As a placeholder, let's try with known non-PDF bytes to see error handling
-    non_pdf_bytes = b"This is not a PDF."
-    try:
-        pdf_text = extract_text_from_file("dummy.pdf", non_pdf_bytes)
-        print("PDF Parsed:\n", pdf_text) # Should not reach here with non_pdf_bytes
-    except FileParsingError as e:
-        print(f"Error parsing (expected for non-PDF) PDF: {e}")
-    except ValueError as e:
-        print(f"Error (ValueError) with PDF: {e}")
-
-    # Test with the sample_document.md we defined earlier
-    print("\n--- Testing with sample_document.md ---")
-    sample_md_path = "sample_document.md" # Assuming it's in the root
-    if os.path.exists(sample_md_path):
-        with open(sample_md_path, 'rb') as f:
-            try:
-                parsed_sample_text = extract_text_from_file(sample_md_path, f)
-                print(f"Successfully parsed '{sample_md_path}'. First 300 chars:\n'{parsed_sample_text[:300]}...'")
-            except (ValueError, FileParsingError) as e:
-                print(f"Error parsing '{sample_md_path}': {e}")
-    else:
-        print(f"'{sample_md_path}' not found. Skipping test.")

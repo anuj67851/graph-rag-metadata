@@ -35,7 +35,7 @@ async def process_document_for_ingestion(filename: str, filepath: str) -> Ingest
         sqlite_conn.update_file_status(filename, "Processing")
 
         # --- Step 2: Text Extraction and Semantic Chunking ---
-        with open(filepath, "rb") as file_content: # <-- This is the main fix
+        with open(filepath, "rb") as file_content:
             raw_text = extract_text_from_file(filename, file_content)
         if not raw_text or not raw_text.strip():
             message = "No text content found in file."
