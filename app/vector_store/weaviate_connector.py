@@ -147,11 +147,17 @@ class WeaviateConnector:
             reformatted_results = []
             if search_results:
                 for res in search_results:
+                    # Prioritize 'certainty' from nearText, but fall back to 'score' for other search types
+                    additional_props = res.get('_additional', {})
+                    score = additional_props.get('certainty') # 'certainty' is used by nearText
+                    if score is None:
+                        score = additional_props.get('score', 0.0) # 'score' may be used by other vectorizers/searches
+
                     reformatted_results.append({
                         "chunk_text": res.get('chunk_text'),
                         "source_document": res.get('source_document'),
                         "entity_ids": res.get('entity_ids', []),
-                        "score": res.get('_additional', {}).get('score', 0.0)
+                        "score": score
                     })
             return reformatted_results
 

@@ -34,17 +34,15 @@ def load_api_schema():
         response.raise_for_status()
         st.session_state.api_schema = response.json()
 
-        # Create a user-friendly map of endpoints
         endpoint_map = {}
         for path, path_item in st.session_state.api_schema.get("paths", {}).items():
             for method, operation in path_item.items():
-                # We won't support file uploads in this simple explorer
                 if "multipart/form-data" in str(operation):
                     continue
                 key = f"[{method.upper()}] {path}"
                 endpoint_map[key] = {"path": path, "method": method.upper(), "details": operation}
         st.session_state.endpoint_map = dict(sorted(endpoint_map.items()))
-        st.session_state.last_response = None # Clear old response on refresh
+        st.session_state.last_response = None
         st.success("API schema loaded successfully!")
     except requests.exceptions.RequestException as e:
         st.error(f"Failed to fetch API schema: {e}")
@@ -54,22 +52,13 @@ def load_api_schema():
 def make_generic_api_request(method, path_template, path_params, query_params, json_body):
     """Constructs and executes a generic API request."""
     try:
-        # Substitute path parameters
         url = urljoin(BACKEND_URL, path_template.format(**path_params))
-
         headers = {"Content-Type": "application/json", "Accept": "application/json, */*"}
-
         st.session_state.last_response = requests.request(
-            method=method,
-            url=url,
-            params=query_params,
-            json=json_body,
-            headers=headers,
-            timeout=120
+            method=method, url=url, params=query_params, json=json_body, headers=headers, timeout=120
         )
     except requests.exceptions.RequestException as e:
         st.session_state.last_response = e
-
 
 # --- Sidebar for Endpoint Selection ---
 with st.sidebar:
@@ -94,54 +83,60 @@ if selected_key:
     details = endpoint_info["details"]
 
     st.header(f"`{endpoint_info['method']}` `{endpoint_info['path']}`")
-    if details.get("summary"):
-        st.subheader(details["summary"])
-    if details.get("description"):
-        st.markdown(details["description"])
-
+    if details.get("summary"): st.subheader(details["summary"])
+    if details.get("description"): st.markdown(details["description"])
     st.markdown("---")
 
-    # --- Parameter Input Form ---
     with st.form("api_form"):
         st.subheader("Parameters")
-
         path_params, query_params, body_data = {}, {}, None
 
-        # Path and Query Parameters
         for param in details.get("parameters", []):
             param_name = param["name"]
             param_in = param["in"]
             param_schema = param.get("schema", {})
-
             if param_in == "path":
                 path_params[param_name] = st.text_input(f"**{param_name}** (path parameter)", help=param.get("description"))
             elif param_in == "query":
                 if param_schema.get("type") == "integer":
                     query_params[param_name] = st.number_input(f"{param_name} (query)", value=param_schema.get("default", 0), help=param.get("description"))
                 elif param_schema.get("type") == "array":
-                    # Simple text input for comma-separated values
                     val = st.text_input(f"{param_name} (query, comma-separated)", help=f"{param.get('description')} e.g., file1.pdf,file2.txt")
-                    if val:
-                        query_params[param_name] = [item.strip() for item in val.split(',')]
-                else: # Default to text input
+                    if val: query_params[param_name] = [item.strip() for item in val.split(',')]
+                else:
                     query_params[param_name] = st.text_input(f"{param_name} (query)", help=param.get("description"))
 
-        # Request Body
         if "requestBody" in details:
             st.subheader("Request Body")
-            body_schema = details["requestBody"]["content"]["application/json"]["schema"]
 
-            # Display the schema to help the user
+            # --- THIS IS THE FIX ---
+            body_schema = details["requestBody"]["content"]["application/json"]["schema"]
+            display_schema = body_schema
+
+            # Check if this is a reference that needs to be resolved
+            if "$ref" in body_schema:
+                ref_path = body_schema["$ref"]
+                # Path is like "#/components/schemas/VectorSearchRequest"
+                # We split by '/' and take the parts after the '#'
+                schema_path_parts = ref_path.split('/')[1:]
+
+                # Navigate the full schema dictionary to find the referenced schema
+                resolved_schema = st.session_state.api_schema
+                for part in schema_path_parts:
+                    resolved_schema = resolved_schema.get(part, {})
+                display_schema = resolved_schema
+            # --- END OF FIX ---
+
             with st.expander("View required JSON schema"):
-                st.json(body_schema)
+                # We now display the potentially resolved schema
+                st.json(display_schema)
 
             body_str = st.text_area("JSON Body", height=250, placeholder="Enter valid JSON here...")
             if body_str:
-                try:
-                    body_data = json.loads(body_str)
+                try: body_data = json.loads(body_str)
                 except json.JSONDecodeError:
                     st.error("Invalid JSON provided in Request Body.")
-                    body_data = "ERROR" # Sentinel to prevent submission
+                    body_data = "ERROR"
 
         submitted = st.form_submit_button("🚀 Send Request")
 
@@ -151,48 +146,31 @@ if selected_key:
         else:
             with st.spinner("Sending request to backend..."):
                 make_generic_api_request(
-                    method=endpoint_info["method"],
-                    path_template=endpoint_info["path"],
-                    path_params=path_params,
-                    query_params=query_params,
-                    json_body=body_data
+                    method=endpoint_info["method"], path_template=endpoint_info["path"],
+                    path_params=path_params, query_params=query_params, json_body=body_data
                 )
-            st.rerun() # Rerun to display the response
+            st.rerun()
 
-    # --- Display Response ---
     if st.session_state.last_response:
         st.markdown("---")
         st.header("Response")
-
         response = st.session_state.last_response
-
         if isinstance(response, requests.Response):
             st.success(f"**Status Code:** `{response.status_code}`")
-            with st.expander("Response Headers"):
-                st.json(dict(response.headers))
-
+            with st.expander("Response Headers"): st.json(dict(response.headers))
             content_type = response.headers.get("Content-Type", "")
-
             if "application/json" in content_type:
                 st.subheader("JSON Response")
                 st.json(response.json())
             elif "application/x-zip-compressed" in content_type or "application/octet-stream" in content_type:
                 st.subheader("File Download")
-                # Try to get filename from headers
                 disposition = response.headers.get('Content-Disposition', '')
                 filename = "downloaded_file"
                 if "filename=" in disposition:
                     filename = disposition.split('filename=')[1].strip('"')
-
-                st.download_button(
-                    label=f"📥 Download {filename}",
-                    data=response.content,
-                    file_name=filename,
-                    mime=content_type
-                )
+                st.download_button(label=f"📥 Download {filename}", data=response.content, file_name=filename, mime=content_type)
             else:
                 st.subheader("Text Response")
                 st.text(response.text)
-
         elif isinstance(response, Exception):
             st.error(f"An exception occurred: {response}")

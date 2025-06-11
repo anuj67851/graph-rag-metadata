@@ -49,21 +49,26 @@ async def handle_user_query(
 @router.post(
     "/vector_search",
     response_model=List[SourceChunk],
-    summary="Perform a raw vector search for text chunks.",
-    response_description="A list of the most similar SourceChunk objects found in the vector store."
+    summary="Perform a raw vector search for text chunks, with optional re-ranking.",
+    response_description="A list of the most similar SourceChunk objects, potentially re-ranked for relevance."
 )
 async def direct_vector_search(
-        search_request: VectorSearchRequest = Body(..., description="The search query, top_k, and optional document filters.")
+        search_request: VectorSearchRequest = Body(..., description="The search query, top_k, filters, and optional re-ranking parameters.")
 ):
     """
     Bypasses the full RAG pipeline and performs a direct vector similarity search
     against the Weaviate vector store.
 
-    This is useful for debugging, testing chunking strategies, or for applications
-    that only need raw semantic search results without LLM-based answer generation.
-    The returned chunks include their similarity score.
+    **New Feature**: You can enable a second-pass re-ranking step by setting `enable_reranking` to `true`.
+    This uses a more powerful (but slower) cross-encoder model to re-score the initial
+    vector search results, providing higher quality relevance ranking.
+
+    - If `enable_reranking` is `false` (default), returns the top `k` results from the vector store.
+    - If `enable_reranking` is `true`, returns the top `rerank_top_n` results after re-ranking.
     """
-    logger.info(f"Received direct vector search request: '{search_request.query}' with top_k={search_request.top_k}")
+    logger.info(
+        f"Received direct vector search request: '{search_request.query}' with top_k={search_request.top_k}, rerank={search_request.enable_reranking}"
+    )
     try:
         return await perform_raw_vector_search(search_request)
     except Exception as e:

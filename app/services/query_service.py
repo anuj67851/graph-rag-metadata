@@ -154,21 +154,49 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
 
 async def perform_raw_vector_search(search_request: VectorSearchRequest) -> List[SourceChunk]:
     """
-    Performs a direct vector search against the vector store and returns the results.
+    Performs a direct vector search against the vector store. If requested,
+    it will also perform a second-pass re-ranking on the initial results.
     """
     weaviate_conn = get_weaviate_connector()
 
+    # If reranking is enabled, we should fetch more initial candidates
+    # to give the reranker a better pool of documents to work with.
+    initial_top_k = search_request.top_k
+    if search_request.enable_reranking:
+        # Fetch more candidates, e.g., 3x the final desired count, but no more than 50
+        initial_top_k = max(search_request.top_k, min(search_request.rerank_top_n * 3, 50))
+        logger.info(f"Reranking enabled. Fetching {initial_top_k} initial candidates.")
+
+    # Step 1: Initial vector search
     search_results_meta = await weaviate_conn.search_similar_chunks(
         query_concepts=[search_request.query],
-        top_k=search_request.top_k,
+        top_k=initial_top_k,
         filter_filenames=search_request.filter_filenames
     )
 
     if not search_results_meta:
         return []
 
-    # Convert the dictionary results into our Pydantic SourceChunk model
-    return [SourceChunk(**res) for res in search_results_meta]
+    initial_chunks = [SourceChunk(**res) for res in search_results_meta]
+
+    # Step 2: Optional Re-ranking
+    if not search_request.enable_reranking:
+        logger.info(f"Reranking disabled. Returning top {search_request.top_k} vector search results.")
+        # Return results trimmed to the original requested top_k
+        return initial_chunks[:search_request.top_k]
+
+    reranker = get_reranker()
+    if not reranker:
+        logger.warning("Reranking was requested, but the reranker is not enabled in the configuration. Returning top vector search results instead.")
+        return initial_chunks[:search_request.rerank_top_n]
+
+    logger.info("Performing re-ranking on initial results...")
+    reranked_chunks = reranker.rerank_chunks(search_request.query, initial_chunks)
+
+    # Step 3: Trim to the final desired count
+    final_chunks = reranked_chunks[:search_request.rerank_top_n]
+
+    return final_chunks
 
 
 def _format_context_for_llm(source_chunks: List[SourceChunk], subgraph: Subgraph) -> str:

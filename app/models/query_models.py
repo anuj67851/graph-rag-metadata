@@ -38,8 +38,17 @@ class VectorSearchRequest(BaseModel):
     Represents the input for a direct vector search against the vector store.
     """
     query: str = Field(..., min_length=1, description="The natural language query to search for.")
-    top_k: int = Field(default=5, ge=1, le=50, description="The number of top matching chunks to return.")
+    top_k: int = Field(default=10, ge=1, le=100, description="The number of top matching chunks to retrieve from the initial vector search. Should always be greater than rerank_top_n.")
     filter_filenames: Optional[List[str]] = Field(
         default=None,
         description="An optional list of filenames to restrict the search to."
+    )
+    enable_reranking: bool = Field(
+        default=False,
+        description="If true, a cross-encoder will re-rank the initial search results for better relevance."
+    )
+    rerank_top_n: int = Field(
+        default=3,
+        ge=1, le=25,
+        description="The final number of chunks to return after re-ranking. Only used if enable_reranking is true."
     )
