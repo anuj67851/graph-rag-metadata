@@ -133,7 +133,7 @@ class WeaviateConnector:
                 .get(class_name, ["chunk_text", "source_document", "entity_ids"])
                 .with_near_text(near_text_filter)
                 .with_limit(top_k)
-                .with_additional(["score", "distance"])
+                .with_additional(["score", "distance", "certainty"])
             )
 
             # 2. Conditionally add the .with_where() clause ONLY if a filter exists
@@ -149,9 +149,13 @@ class WeaviateConnector:
                 for res in search_results:
                     # Prioritize 'certainty' from nearText, but fall back to 'score' for other search types
                     additional_props = res.get('_additional', {})
-                    score = additional_props.get('certainty') # 'certainty' is used by nearText
-                    if score is None:
-                        score = additional_props.get('score', 0.0) # 'score' may be used by other vectorizers/searches
+                    score = 0.0  # Default to 0.0
+                    # For nearText, 'certainty' is the primary similarity score (0 to 1).
+                    if 'certainty' in additional_props and additional_props['certainty'] is not None:
+                        score = additional_props['certainty']
+                    # Fallback for other potential search methods that might use 'score'.
+                    elif 'score' in additional_props and additional_props['score'] is not None:
+                        score = additional_props['score']
 
                     reformatted_results.append({
                         "chunk_text": res.get('chunk_text'),
