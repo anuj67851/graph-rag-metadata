@@ -109,6 +109,8 @@ This will:
 
 You will see logs from all services in your terminal. Wait until you see messages indicating that all services have started successfully.
 
+### NOTE: You can view the api endpoints at `http://localhost:8000/redoc` or `http://localhost:8000/docs`.
+
 ### 4. Run the Streamlit Frontend
 
 For the best development experience, run the Streamlit UI in a separate terminal.
