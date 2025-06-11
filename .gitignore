@@ -164,4 +164,5 @@ cython_debug/
 
 combined_code.txt
 util.py
+qodana.yaml
 
