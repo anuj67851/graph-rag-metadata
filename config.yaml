@@ -7,7 +7,7 @@ llm_query_response_model_name: "gpt-4o-mini"
 
 retrieval_pipeline:
   # Stage 1: How many chunks to fetch for initial context
-  context_chunks_for_expansion: 2
+  context_chunks_for_expansion: 3
 
   # Stage 2: How many chunks to retrieve in the main search
   # This should be larger to accommodate results from multiple queries
@@ -24,11 +24,14 @@ retrieval_pipeline:
     num_expansions: 3
 
   # Stage 4: Re-ranking settings
+  candidates_per_doc: 5
   reranking:
     enabled: true
     model_repo: "cross-encoder/ms-marco-MiniLM-L-6-v2"
-    # After re-ranking the main_search_top_k results, how many to keep for single document
+    # After re-ranking the main_search_top_k results
     final_top_n: 3
+    # if multiple documents are selected, select this number of chunks from each document
+    top_n_per_reranked_doc: 3
 
 # --- Embedding Model (Hugging Face) ---
 # This repo will be used by Weaviate's text2vec-transformers module.

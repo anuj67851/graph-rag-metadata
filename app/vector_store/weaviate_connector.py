@@ -110,24 +110,16 @@ class WeaviateConnector:
     ) -> List[Dict[str, Any]]:
         """
         Searches for similar chunks using Weaviate's nearText search.
-
-        Args:
-            query_concepts: The queries to search for.
-            top_k: The number of top similar chunks to return.
-            filter_filenames: An optional list of filenames to restrict the search to.
-
-        Returns:
-            A list of result dictionaries, each containing the chunk data and search score.
+        This function now handles both global and filtered searches robustly.
         """
         client = self._get_client()
         class_name = settings.WEAVIATE_CLASS_NAME
 
-        # The FIX: Pass the list directly to the 'concepts' key
         near_text_filter = {"concepts": query_concepts}
 
-        # Build the 'where' filter if filenames are provided
         where_filter = None
         if filter_filenames:
+            logger.info(f"Applying search filter for documents: {filter_filenames}")
             where_filter = {
                 "path": ["source_document"],
                 "operator": "ContainsAny",
@@ -135,26 +127,32 @@ class WeaviateConnector:
             }
 
         try:
-            result = (
+            # 1. Start with the base query builder
+            query_builder = (
                 client.query
                 .get(class_name, ["chunk_text", "source_document", "entity_ids"])
                 .with_near_text(near_text_filter)
                 .with_limit(top_k)
-                .with_additional(["score"]) # 'score' is a Weaviate-native similarity metric
-                .with_where(where_filter)
-                .do()
+                .with_additional(["score", "distance"])
             )
 
-            search_results = result["data"]["Get"][class_name]
-            # Reformat the results to match the 'SourceChunk' model
+            # 2. Conditionally add the .with_where() clause ONLY if a filter exists
+            if where_filter is not None:
+                query_builder = query_builder.with_where(where_filter)
+
+            # 3. Execute the fully constructed query
+            result = query_builder.do()
+
+            search_results = result.get("data", {}).get("Get", {}).get(class_name, [])
             reformatted_results = []
-            for res in search_results:
-                reformatted_results.append({
-                    "chunk_text": res.get('chunk_text'),
-                    "source_document": res.get('source_document'),
-                    "entity_ids": res.get('entity_ids', []),
-                    "score": res.get('_additional', {}).get('score', 0.0)
-                })
+            if search_results:
+                for res in search_results:
+                    reformatted_results.append({
+                        "chunk_text": res.get('chunk_text'),
+                        "source_document": res.get('source_document'),
+                        "entity_ids": res.get('entity_ids', []),
+                        "score": res.get('_additional', {}).get('score', 0.0)
+                    })
             return reformatted_results
 
         except Exception as e:

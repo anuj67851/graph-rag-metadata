@@ -23,129 +23,132 @@ def _create_cache_key(query: str, filenames: Optional[List[str]]) -> str:
 
 async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     """
-    Processes a user query via a multi-stage RAG pipeline with expansion and re-ranking.
+    Processes a user query through a sophisticated, multi-stage RAG pipeline.
+
+    The pipeline consists of the following stages:
+    1.  **Cache Check**: Checks Redis for a cached response to this exact query to return immediately.
+    2.  **Query Expansion (Optional)**:
+        a. Performs an initial, small search to find context.
+        b. Uses an LLM to generate multiple, context-aware query variations.
+    3.  **Main Retrieval**:
+        - If file filters are applied, uses a **per-document retrieval** strategy to fetch a diverse set of candidate chunks from each specified file.
+        - If no filters are applied, performs a **global retrieval** across all documents.
+    4.  **Re-ranking (Optional)**:
+        - Uses a powerful cross-encoder model to re-score all candidate chunks for relevance.
+        - If per-document retrieval was used, the re-ranking is also done on a per-document basis to preserve source diversity.
+    5.  **Graph Augmentation**: Fetches N-hop subgraphs from Neo4j for entities found in the final, re-ranked chunks.
+    6.  **Final Answer Generation**: Synthesizes the final text chunks and graph context into a coherent answer using a powerful LLM.
+    7.  **Cache Population**: Caches the final response in Redis for future requests.
+
+    Args:
+        query_request: The user's request, containing the query and optional file filters.
+
+    Returns:
+        A QueryResponse object containing the final answer and all contextual sources.
     """
+    # --- Initial Setup ---
     user_query = query_request.query
     filter_filenames = query_request.filter_filenames
-
     pipeline_config = settings.RETRIEVAL_PIPELINE
     query_expansion_config = pipeline_config.get('query_expansion', {})
     reranking_config = pipeline_config.get('reranking', {})
-
     logger.info(f"Processing query: '{user_query}' with filters: {filter_filenames}")
 
-    # Get all necessary connectors
+    # --- Stage 1: Cache Check ---
     redis_conn: RedisConnector = get_redis_connector()
+    cache_key = _create_cache_key(user_query, filter_filenames)
+    if cached_response := await redis_conn.get_query_cache(cache_key):
+        logger.info("Returning cached response.")
+        return cached_response
+
+    # --- Get Database Connectors ---
     weaviate_conn: WeaviateConnector = get_weaviate_connector()
     neo4j_conn: Neo4jConnector = await get_neo4j_connector()
 
-    # --- Check Cache ---
-    cache_key = _create_cache_key(user_query, filter_filenames)
-    cached_response = await redis_conn.get_query_cache(cache_key)
-    if cached_response:
-        return cached_response
-
-    # --- Stage 1: Initial Context Retrieval for Expansion ---
-    context_chunks_for_expansion = []
+    # --- Stage 2: Query Expansion (Optional) ---
+    queries_for_main_search = [user_query]
     if query_expansion_config.get('enabled'):
+        logger.info("Query expansion enabled. Fetching context for expansion...")
         context_chunks_meta = await weaviate_conn.search_similar_chunks(
-            query_concepts=[user_query,],
-            top_k=pipeline_config.get('context_chunks_for_expansion', 2),
+            query_concepts=[user_query],
+            top_k=pipeline_config.get('context_chunks_for_expansion', 3),
             filter_filenames=filter_filenames
         )
-        context_chunks_for_expansion = [chunk['chunk_text'] for chunk in context_chunks_meta]
+        if context_chunks_meta:
+            context_text = "\n---\n".join([chunk['chunk_text'] for chunk in context_chunks_meta])
+            expanded_queries = await generate_expanded_queries_from_context(user_query, context_text)
+            queries_for_main_search.extend(expanded_queries)
+            queries_for_main_search = list(set(queries_for_main_search))
 
-    # --- Stage 2: Context-Aware Query Expansion ---
-    queries_for_main_search = [user_query,]
-    if query_expansion_config.get('enabled') and context_chunks_for_expansion:
-        context_text = "\n---\n".join(context_chunks_for_expansion)
-        expanded_queries = await generate_expanded_queries_from_context(user_query, context_text)
-        queries_for_main_search.extend(expanded_queries)
-        queries_for_main_search = list(set(queries_for_main_search)) # De-duplicate
+    logger.info(f"Performing main search with {len(queries_for_main_search)} queries.")
 
-    logger.info(f"Performing main search with {len(queries_for_main_search)} queries: {queries_for_main_search}")
-
-    # --- Stage 3: Main Search ---
+    # --- Stage 3: Main Retrieval ---
     candidate_chunks_meta = []
     if filter_filenames:
-        # User specified files, so use the per-document retrieval strategy
         logger.info("Using per-document retrieval strategy.")
         candidate_chunks_meta = await weaviate_conn.search_chunks_per_document(
             query_concepts=queries_for_main_search,
             filenames=filter_filenames,
-            per_file_limit=pipeline_config.get('per_file_chunk_limit', 3),
+            per_file_limit=pipeline_config.get('candidates_per_doc', 5)
         )
     else:
-        # No files specified, use the global retrieval strategy
         logger.info("Using global retrieval strategy.")
         candidate_chunks_meta = await weaviate_conn.search_similar_chunks(
             query_concepts=queries_for_main_search,
             top_k=pipeline_config.get('main_search_top_k', 15),
             filter_filenames=None
         )
+
     if not candidate_chunks_meta:
-        logger.warning("Main search returned no candidate chunks.")
         return QueryResponse(llm_answer="Could not find any relevant information.", subgraph_context=Subgraph(), source_chunks=[])
 
     candidate_chunks = [SourceChunk(**meta) for meta in candidate_chunks_meta]
 
-    # --- Stage 4: Re-ranking ---
+    # --- Stage 4: Re-ranking (Optional) ---
     final_chunks_for_context = []
-    if not reranking_config.get('enabled'):
-        # If not enabled, just take the top N from the initial search
-        final_top_n = reranking_config.get('final_top_n', 3)
-        final_chunks_for_context = candidate_chunks[:final_top_n]
-    else:
-        reranker: ReRanker = get_reranker()
-        if not reranker:
-            logger.warning("Re-ranking enabled but module not initialized. Skipping.")
-            final_top_n = reranking_config.get('final_top_n', 3)
-            final_chunks_for_context = candidate_chunks[:final_top_n]
+    reranker = get_reranker() if reranking_config.get('enabled') else None
+
+    if reranker:
+        if filter_filenames:
+            logger.info("Applying per-document re-ranking strategy to preserve diversity.")
+            chunks_by_doc = defaultdict(list)
+            for chunk in candidate_chunks:
+                chunks_by_doc[chunk.source_document].append(chunk)
+
+            # This is the configurable number of chunks to keep from each document.
+            top_n_per_doc = reranking_config.get('top_n_per_reranked_doc', 3)
+            for doc_chunks in chunks_by_doc.values():
+                reranked_group = reranker.rerank_chunks(user_query, doc_chunks)
+                final_chunks_for_context.extend(reranked_group[:top_n_per_doc])
+            logger.info(f"Re-ranked and selected top {top_n_per_doc} chunk(s) from {len(chunks_by_doc)} documents.")
         else:
-            if filter_filenames:
-                # Group candidate chunks by their source document
-                chunks_by_doc = defaultdict(list)
-                for chunk in candidate_chunks:
-                    chunks_by_doc[chunk.source_document].append(chunk)
+            logger.info("Applying global re-ranking strategy.")
+            final_chunks_for_context = reranker.rerank_chunks(user_query, candidate_chunks)
+    else:
+        logger.info("Re-ranking is disabled. Using top results from initial search.")
+        candidate_chunks.sort(key=lambda x: x.score, reverse=True)
+        final_chunks_for_context = candidate_chunks[:reranking_config.get('final_top_n', 3)]
 
-                # Re-rank within each group and collect the best chunk(s)
-                for doc_name, doc_chunks in chunks_by_doc.items():
-                    reranked_group = reranker.rerank_chunks(user_query, doc_chunks)
-                    # This could be made configurable, e.g., 'top_n_per_reranked_doc'
-                    final_chunks_for_context.extend(reranked_group[:reranking_config.get('final_top_n', 3)]) # Take the top 1 from each doc
-                logger.info(f"Re-ranked and selected top chunks from {len(chunks_by_doc)} documents.")
-            else:
-                # Global query, so re-rank the whole set together
-                final_chunks_for_context = reranker.rerank_chunks(user_query, candidate_chunks)
-
-    # --- Final Context Assembly and Answer Generation ---
+    # --- Stage 5, 6, 7: Final Assembly, Generation, and Caching ---
     if not final_chunks_for_context:
-        logger.warning("No chunks remained after re-ranking.")
         return QueryResponse(llm_answer="Found some initial information, but could not refine it to a final answer.", subgraph_context=Subgraph(), source_chunks=[])
 
-    # Augment with graph context
+    final_chunks_for_context.sort(key=lambda x: x.score, reverse=True)
+
     entity_ids_to_fetch = set(eid for chunk in final_chunks_for_context for eid in chunk.entity_ids if eid)
     retrieved_subgraph = Subgraph()
     if entity_ids_to_fetch:
-        retrieved_subgraph = await neo4j_conn.get_subgraph_for_entities(
-            canonical_names=list(entity_ids_to_fetch),
-            hop_depth=settings.ENTITY_INFO_HOP_DEPTH
-        )
+        retrieved_subgraph = await neo4j_conn.get_subgraph_for_entities(list(entity_ids_to_fetch), settings.ENTITY_INFO_HOP_DEPTH)
 
-    # Generate final answer
     combined_context = _format_context_for_llm(final_chunks_for_context, retrieved_subgraph)
-    final_answer_text = await generate_response_from_context(user_query, combined_context)
-    if not final_answer_text:
-        final_answer_text = "I found relevant information but had an issue formulating a response."
+    final_answer_text = await generate_response_from_context(user_query, combined_context) or "I found relevant information but had an issue formulating a response."
 
-    # Construct and cache final response
     final_response = QueryResponse(
         llm_answer=final_answer_text,
         subgraph_context=retrieved_subgraph,
         source_chunks=final_chunks_for_context
     )
     await redis_conn.set_query_cache(cache_key, final_response)
-
     return final_response
 
 
