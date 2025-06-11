@@ -3,7 +3,6 @@ from typing import Dict, Any, Tuple
 
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings
 
 from app.core.config import settings
 from app.utils.file_parser import extract_text_from_file, FileParsingError

@@ -5,11 +5,11 @@ from typing import List, Optional
 
 from app.core.config import settings
 from app.llm_integration.openai_connector import generate_response_from_context, generate_expanded_queries_from_context
-from app.retrieval.reranker import ReRanker, get_reranker
+from app.retrieval.reranker import get_reranker
 from app.vector_store.weaviate_connector import get_weaviate_connector, WeaviateConnector
 from app.graph_db.neo4j_connector import get_neo4j_connector, Neo4jConnector
 from app.caching.redis_connector import get_redis_connector, RedisConnector
-from app.models.query_models import QueryRequest, QueryResponse, SourceChunk
+from app.models.query_models import QueryRequest, QueryResponse, SourceChunk, VectorSearchRequest
 from app.models.common_models import Subgraph
 
 logger = logging.getLogger(__name__)
@@ -150,6 +150,25 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     )
     await redis_conn.set_query_cache(cache_key, final_response)
     return final_response
+
+
+async def perform_raw_vector_search(search_request: VectorSearchRequest) -> List[SourceChunk]:
+    """
+    Performs a direct vector search against the vector store and returns the results.
+    """
+    weaviate_conn = get_weaviate_connector()
+
+    search_results_meta = await weaviate_conn.search_similar_chunks(
+        query_concepts=[search_request.query],
+        top_k=search_request.top_k,
+        filter_filenames=search_request.filter_filenames
+    )
+
+    if not search_results_meta:
+        return []
+
+    # Convert the dictionary results into our Pydantic SourceChunk model
+    return [SourceChunk(**res) for res in search_results_meta]
 
 
 def _format_context_for_llm(source_chunks: List[SourceChunk], subgraph: Subgraph) -> str:

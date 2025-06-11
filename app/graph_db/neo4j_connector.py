@@ -194,6 +194,117 @@ class Neo4jConnector:
 
         return self._process_records_to_subgraph(records)
 
+    async def get_full_graph_sample(self, node_limit: int, edge_limit: int, filenames: Optional[List[str]] = None) -> Subgraph:
+        """
+        Retrieves a sample of the full graph using a robust query.
+        All Cypher logic is now contained within the connector.
+        """
+        match_clause = "MATCH (n)"
+        if filenames:
+            match_clause = "MATCH (n) WHERE any(file IN n.source_document_filename WHERE file IN $filenames)"
+
+        # This query first finds a set of edges, then returns those edges
+        # along with their start and end nodes. This is a common sampling strategy.
+        query = f"""
+        {match_clause}
+        WITH n LIMIT $node_limit
+        MATCH (n)-[r]-(m)
+        RETURN n, m, r
+        LIMIT $edge_limit
+        """
+        params = {"node_limit": node_limit, "edge_limit": edge_limit, "filenames": filenames}
+        records = await self.execute_query(query, params)
+
+        # The connector is already responsible for converting records to a subgraph
+        return self._process_records_to_subgraph(records)
+
+    async def get_top_n_busiest_nodes_subgraph(self, top_n: int, hop_depth: int, filenames: Optional[List[str]] = None) -> Subgraph:
+        """
+        Finds the busiest nodes and returns their N-hop subgraph.
+        """
+        match_clause = "MATCH (n)"
+        if filenames:
+            match_clause = "MATCH (n) WHERE any(file IN n.source_document_filename WHERE file IN $filenames)"
+
+        query_busiest_nodes = f"""
+        {match_clause}
+        WITH n
+        WHERE n.canonical_name IS NOT NULL
+        RETURN n.canonical_name AS canonical_name, COUNT{{(n)--()}} AS degree
+        ORDER BY degree DESC
+        LIMIT toInteger($top_n)
+        """
+        params = {"top_n": top_n, "filenames": filenames}
+        busiest_nodes_results = await self.execute_query(query_busiest_nodes, params)
+
+        if not busiest_nodes_results:
+            return Subgraph()
+
+        busiest_canonical_names = [record["canonical_name"] for record in busiest_nodes_results]
+
+        # Reuse the existing subgraph fetching logic
+        return await self.get_subgraph_for_entities(
+            canonical_names=busiest_canonical_names,
+            hop_depth=hop_depth
+        )
+
+    async def get_graph_schema(self) -> Dict[str, List[str]]:
+        """
+        Dynamically discovers the node labels and relationship types in the database.
+        """
+        # Query for all labels in use
+        labels_query = "CALL db.labels() YIELD label RETURN collect(label) as labels"
+        # Query for all relationship types in use
+        rel_types_query = "CALL db.relationshipTypes() YIELD relationshipType RETURN collect(relationshipType) as rel_types"
+
+        labels_records = await self.execute_query(labels_query)
+        rel_types_records = await self.execute_query(rel_types_query)
+
+        labels = labels_records[0]['labels'] if labels_records and labels_records[0]['labels'] else []
+        rel_types = rel_types_records[0]['rel_types'] if rel_types_records and rel_types_records[0]['rel_types'] else []
+
+        return {"node_labels": labels, "relationship_types": rel_types}
+
+    async def safely_remove_file_references(self, filename: str):
+        """
+        Finds all nodes and relationships referencing a specific file and safely
+        removes them. If an element is only sourced from this file, it is deleted.
+        Otherwise, only the filename is removed from its source list.
+        This entire operation is contained within the connector.
+        """
+        logger.info(f"Connector: Initiating safe removal of references for file: '{filename}'.")
+
+        # This is the raw Cypher query, now properly encapsulated in the data access layer.
+        query = """
+        // Process Nodes first
+        MATCH (n) WHERE $filename IN n.source_document_filename
+        WITH n, size(n.source_document_filename) AS source_count
+        // If this file is the only source, detach and delete the node
+        FOREACH (_ IN CASE WHEN source_count = 1 THEN [1] ELSE [] END |
+            DETACH DELETE n
+        )
+        // If there are other sources, just remove the filename from the list
+        FOREACH (_ IN CASE WHEN source_count > 1 THEN [1] ELSE [] END |
+            SET n.source_document_filename = [file IN n.source_document_filename WHERE file <> $filename]
+        )
+    
+        // Then, process Relationships
+        WITH 'nodes done' as marker
+        MATCH ()-[r]-() WHERE $filename IN r.source_document_filename
+        WITH r, size(r.source_document_filename) AS source_count
+        // If this file is the only source, delete the relationship
+        FOREACH (_ IN CASE WHEN source_count = 1 THEN [1] ELSE [] END |
+            DELETE r
+        )
+        // If there are other sources, remove the filename from the list
+        FOREACH (_ IN CASE WHEN source_count > 1 THEN [1] ELSE [] END |
+            SET r.source_document_filename = [file IN r.source_document_filename WHERE file <> $filename]
+        )
+        """
+        params = {"filename": filename}
+        await self.execute_query(query, params)
+        logger.info(f"Connector: Neo4j safe removal process completed for '{filename}'.")
+
 # --- Singleton Management ---
 neo4j_connector_instance: Optional[Neo4jConnector] = None
 
