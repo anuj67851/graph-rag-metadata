@@ -23,6 +23,9 @@ st.markdown(
 
     - **🌐 Graph Explorer:** Visually explore the connections and relationships that 
       the system has extracted from your documents.
+      
+    - **🚀 API Explorer:** Explore the endpoints and parameters of the backend API 
+      by sending them requests directly.
 
     ### How it Works
     1.  **Ingestion:** When you upload a document, it's broken down into semantic chunks.
