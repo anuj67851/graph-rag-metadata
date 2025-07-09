@@ -33,7 +33,7 @@ root_logger.addHandler(file_handler)
 logger = logging.getLogger(__name__)
 
 
-# --- THE FIX: Lifespan Context Manager ---
+# --- Lifespan Context Manager ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
