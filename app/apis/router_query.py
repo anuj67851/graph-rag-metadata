@@ -28,10 +28,12 @@ async def handle_user_query(
     """
     Accepts a user query and processes it through the complete RAG pipeline:
     1.  **Cache Check**: Looks for a previously cached response.
-    2.  **Retrieval**: Performs a hybrid search to find relevant text chunks from the vector store.
-    3.  **Graph Augmentation**: Fetches related entities and relationships from the knowledge graph to enrich the context.
-    4.  **LLM Generation**: Synthesizes the text and graph context into a coherent, final answer using a large language model.
-    5.  **Cache Population**: Caches the new response for future requests.
+    2.  **Contextual Query Expansion**: Uses an initial hybrid search to find context, then expands the query with an LLM.
+    3.  **Advanced Hybrid Retrieval**: Performs a powerful hybrid search using the original query for keywords and expanded queries for semantic meaning.
+    4.  **Re-ranking**: Uses a cross-encoder to re-rank retrieved chunks for maximum relevance.
+    5.  **Graph Augmentation**: Fetches related entities from the knowledge graph to enrich the context.
+    6.  **LLM Generation**: Synthesizes the text and graph context into a coherent, final answer.
+    7.  **Cache Population**: Caches the new response for future requests.
     """
     if not query_request.query or not query_request.query.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query cannot be empty.")
@@ -49,11 +51,11 @@ async def handle_user_query(
 @router.post(
     "/vector_search",
     response_model=List[SourceChunk],
-    summary="Perform a raw vector search for text chunks, with optional re-ranking.",
+    summary="Perform a raw hybrid (vector + keyword) search for text chunks.",
     response_description="A list of the most similar SourceChunk objects, potentially re-ranked for relevance."
 )
 async def direct_vector_search(
-        search_request: VectorSearchRequest = Body(..., description="The search query, top_k, filters, and optional re-ranking parameters.")
+        search_request: VectorSearchRequest = Body(..., description="The search query, top_k, filters, and optional hybrid/re-ranking parameters.")
 ):
     """
     Bypasses the full RAG pipeline and performs a direct vector similarity search
@@ -67,7 +69,7 @@ async def direct_vector_search(
     - If `enable_reranking` is `true`, returns the top `rerank_top_n` results after re-ranking.
     """
     logger.info(
-        f"Received direct vector search request: '{search_request.query}' with top_k={search_request.top_k}, rerank={search_request.enable_reranking}"
+        f"Received direct hybrid search request: '{search_request.query}' with top_k={search_request.top_k}, alpha={search_request.alpha}, rerank={search_request.enable_reranking}"
     )
     try:
         return await perform_raw_vector_search(search_request)

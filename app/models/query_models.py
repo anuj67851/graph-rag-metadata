@@ -43,6 +43,11 @@ class VectorSearchRequest(BaseModel):
         default=None,
         description="An optional list of filenames to restrict the search to."
     )
+    alpha: Optional[float] = Field(
+        default=None,
+        ge=0, le=1,
+        description="The weighting for hybrid search. 0=BM25 (keyword), 1=dense (vector), 0.5=balanced. If None, uses the system default from config.yaml."
+    )
     enable_reranking: bool = Field(
         default=False,
         description="If true, a cross-encoder will re-rank the initial search results for better relevance."

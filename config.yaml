@@ -6,6 +6,9 @@ llm_ingestion_model_name: "gpt-4o"
 llm_query_response_model_name: "gpt-4o-mini"
 
 retrieval_pipeline:
+  # Add alpha for hybrid search. 0.0=BM25, 0.5=Hybrid, 1.0=Dense
+  hybrid_search_alpha: 0.7
+
   # Stage 1: How many chunks to fetch for initial context
   context_chunks_for_expansion: 3
 

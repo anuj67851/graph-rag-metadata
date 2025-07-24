@@ -18,6 +18,7 @@ system_messages:
     clearly state that the information is not available in the provided context.
     Do not make up information or use external knowledge.
     Be concise and directly answer the query. Cite the source document if available in the context.
+    If query is not seeking information. Respond with appropriate greeting or message.
 
 user_prompts:
   extract_entities_relationships: |

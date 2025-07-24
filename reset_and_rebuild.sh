@@ -12,6 +12,7 @@ PROJECT_NAME=$(basename "$PWD")
 
 # Define the names of the volumes to be removed.
 # Docker composes volume names as <project_name>_<volume_name>
+# Dont do this in production
 VOLUMES_TO_DELETE=(
     "${PROJECT_NAME}_weaviate_data"
     "${PROJECT_NAME}_neo4j_data"

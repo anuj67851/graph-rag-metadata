@@ -1,6 +1,7 @@
 import weaviate
 import logging
 from typing import List, Optional, Dict, Any
+import numpy as np
 
 from app.core.config import settings
 
@@ -47,13 +48,27 @@ class WeaviateConnector:
 
                 class_obj = {
                     "class": class_name,
-                    # Configure Weaviate to use the text2vec-transformers module
                     "vectorizer": "text2vec-transformers",
                     "moduleConfig": {
                         "text2vec-transformers": {
-                            # Setting the model to use for vectorization.
                             "model": settings.EMBEDDING_MODEL_REPO,
-                            "vectorizeClassName": False
+                            "vectorizeClassName": False,
+                            # Ensure proper inference URL
+                            "inferenceUrl": f"http://{settings.WEAVIATE_HOST.replace('weaviate', 'transformers-inference')}:8080"
+                        }
+                    },
+                    # Explicit BM25 configuration - important for hybrid search
+                    "invertedIndexConfig": {
+                        "bm25": {
+                            "enabled": True,
+                            "b": 0.75,
+                            "k1": 1.2
+                        },
+                        "cleanupIntervalSeconds": 60,
+                        "stopwords": {
+                            "additions": None,
+                            "preset": "en",
+                            "removals": None
                         }
                     },
                     "properties": [
@@ -61,21 +76,29 @@ class WeaviateConnector:
                             "name": "chunk_text",
                             "dataType": ["text"],
                             "description": "The actual text content of the chunk.",
+                            "tokenization": "word",
+                            # Important: ensure this field is indexed for BM25
+                            "indexSearchable": True,
+                            "indexFilterable": False
                         },
                         {
                             "name": "source_document",
                             "dataType": ["string"],
                             "description": "The filename of the source document for this chunk.",
+                            "indexSearchable": False,
+                            "indexFilterable": True
                         },
                         {
                             "name": "entity_ids",
                             "dataType": ["string[]"],
                             "description": "A list of canonical entity names found in this chunk.",
+                            "indexSearchable": False,
+                            "indexFilterable": True
                         }
                     ]
                 }
                 client.schema.create_class(class_obj)
-                logger.info(f"Successfully created Weaviate class '{class_name}' with vectorizer '{settings.EMBEDDING_MODEL_REPO}'.")
+                logger.info(f"Successfully created Weaviate class '{class_name}' with vectorizer '{settings.EMBEDDING_MODEL_REPO}' and BM25 enabled.")
             else:
                 raise e
 
@@ -102,20 +125,53 @@ class WeaviateConnector:
 
         logger.info(f"Added {len(chunks_data)} chunks to Weaviate class '{class_name}'.")
 
-    async def search_similar_chunks(
-            self,
-            query_concepts: List[str],
-            top_k: int = 5,
-            filter_filenames: Optional[List[str]] = None
-    ) -> List[Dict[str, Any]]:
+    async def get_vector_for_concepts(self, concepts: List[str]) -> Optional[List[float]]:
         """
-        Searches for similar chunks using Weaviate's nearText search.
-        This function now handles both global and filtered searches robustly.
+        Asks Weaviate to generate a single, averaged vector for a list of text concepts.
+        This is the correct way to "use" the external vectorizer.
         """
         client = self._get_client()
         class_name = settings.WEAVIATE_CLASS_NAME
 
-        near_text_filter = {"concepts": query_concepts}
+        # We perform a dummy query using nearText. Weaviate calculates the
+        # vector for the concepts internally. We ask for the vector back.
+        try:
+            result = (
+                client.query
+                .get(class_name, []) # No properties needed
+                .with_near_text({"concepts": concepts})
+                .with_limit(1) # We only need one result to grab the vector from
+                .with_additional("vector")
+                .do() # In async context, you might need await .ado()
+            )
+
+            # Extract the vector from the query that was actually performed
+            if (result and result.get("data", {}).get("Get", {}).get(class_name) and
+                    result["data"]["Get"][class_name][0]["_additional"]["vector"]):
+                vector = result["data"]["Get"][class_name][0]["_additional"]["vector"]
+                logger.info(f"Successfully generated a vector for {len(concepts)} concepts.")
+                return vector
+            else:
+                logger.warning("Could not retrieve a vector from Weaviate for the given concepts.")
+                return None
+        except Exception as e:
+            logger.error(f"Error generating vector via Weaviate: {e}", exc_info=True)
+            return None
+
+    async def search_similar_chunks(
+            self,
+            query: str,
+            alpha: float,
+            top_k: int = 5,
+            filter_filenames: Optional[List[str]] = None,
+            search_vector: Optional[List[float]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Searches for similar chunks using Weaviate's hybrid search. It can use a
+        different set of concepts for the keyword and vector parts of the search.
+        """
+        client = self._get_client()
+        class_name = settings.WEAVIATE_CLASS_NAME
 
         where_filter = None
         if filter_filenames:
@@ -131,7 +187,11 @@ class WeaviateConnector:
             query_builder = (
                 client.query
                 .get(class_name, ["chunk_text", "source_document", "entity_ids"])
-                .with_near_text(near_text_filter)
+                .with_hybrid(
+                    query=query,               # Use original query for precise keyword (BM25) search.
+                    alpha=alpha,                      # The balance parameter.
+                    vector=search_vector,
+                )
                 .with_limit(top_k)
                 .with_additional(["score", "distance", "certainty"])
             )
@@ -193,21 +253,14 @@ class WeaviateConnector:
 
     async def search_chunks_per_document(
             self,
-            query_concepts: List[str],
+            query: str,
+            alpha: float,
             filenames: List[str],
-            per_file_limit: int = 3
+            per_file_limit: int = 3,
+            search_vector: Optional[List[float]] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Performs a separate search for each specified document and returns the top
-        N chunks from each, effectively diversifying the result set.
-
-        Args:
-            query_concepts: The list of search queries.
-            filenames: The list of document filenames to search within.
-            per_file_limit: The number of top chunks to return from each document.
-
-        Returns:
-            A combined list of the top chunks from each specified document.
+        Performs a separate hybrid search for each specified document.
         """
         all_results = []
         # Use a set to keep track of the text of chunks we've already added
@@ -216,15 +269,16 @@ class WeaviateConnector:
 
         for filename in filenames:
             # For each file, perform a targeted search
-            logger.info(f"Performing targeted search in file: '{filename}' for concepts: {query_concepts}")
+            logger.info(f"Performing targeted hybrid search in file: '{filename}'")
 
             # The search_similar_chunks method already supports filtering, so we can reuse it
             results_for_file = await self.search_similar_chunks(
-                query_concepts=query_concepts,
+                query=query,
+                alpha=alpha,
                 top_k=per_file_limit,
-                filter_filenames=[filename] # Filter for just this one file
+                filter_filenames=[filename],
+                search_vector=search_vector,
             )
-
             for res in results_for_file:
                 if res['chunk_text'] not in seen_chunk_texts:
                     all_results.append(res)

@@ -36,8 +36,8 @@ services:
       - transformers-inference
 
   # Hugging Face Model Container (managed by Weaviate)
-  transformers-inference: # The FIX: Service name updated for clarity
-    # The FIX: Correct image repository 'transformers-inference'
+  transformers-inference: # Service name updated for clarity
+    # Correct image repository 'transformers-inference'
     image: cr.weaviate.io/semitechnologies/transformers-inference:sentence-transformers-multi-qa-mpnet-base-cos-v1
     container_name: transformers-inference-container
     restart: on-failure

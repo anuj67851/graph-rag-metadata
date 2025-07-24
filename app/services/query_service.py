@@ -52,6 +52,7 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     pipeline_config = settings.RETRIEVAL_PIPELINE
     query_expansion_config = pipeline_config.get('query_expansion', {})
     reranking_config = pipeline_config.get('reranking', {})
+    hybrid_alpha = pipeline_config.get('hybrid_search_alpha', 0.5)
     logger.info(f"Processing query: '{user_query}' with filters: {filter_filenames}")
 
     # --- Stage 1: Cache Check ---
@@ -66,37 +67,56 @@ async def process_user_query(query_request: QueryRequest) -> QueryResponse:
     neo4j_conn: Neo4jConnector = await get_neo4j_connector()
 
     # --- Stage 2: Query Expansion (Optional) ---
-    queries_for_main_search = [user_query]
+    vector_search_queries = [user_query]
     if query_expansion_config.get('enabled'):
         logger.info("Query expansion enabled. Fetching context for expansion...")
-        context_chunks_meta = await weaviate_conn.search_similar_chunks(
-            query_concepts=[user_query],
-            top_k=pipeline_config.get('context_chunks_for_expansion', 3),
+
+        # Stage 1: Initial Context Retrieval (small hybrid search)
+        context_chunks_for_expansion_meta = await weaviate_conn.search_similar_chunks(
+            query=user_query,
+            alpha=hybrid_alpha, # Use the same alpha for consistency
+            top_k=query_expansion_config.get('context_chunks_for_expansion', 3),
             filter_filenames=filter_filenames
         )
-        if context_chunks_meta:
-            context_text = "\n---\n".join([chunk['chunk_text'] for chunk in context_chunks_meta])
-            expanded_queries = await generate_expanded_queries_from_context(user_query, context_text)
-            queries_for_main_search.extend(expanded_queries)
-            queries_for_main_search = list(set(queries_for_main_search))
 
-    logger.info(f"Performing main search with {len(queries_for_main_search)} queries.")
+        # Stage 2: Query Expansion
+        if context_chunks_for_expansion_meta:
+            context_text = "\n---\n".join([chunk['chunk_text'] for chunk in context_chunks_for_expansion_meta])
+            expanded_queries = await generate_expanded_queries_from_context(user_query, context_text)
+            vector_search_queries.extend(expanded_queries)
+            # Remove duplicates
+            vector_search_queries = list(set(vector_search_queries))
+            logger.info(f"Generated {len(vector_search_queries) - 1} expanded queries.")
+
+    logger.info(f"Performing main search with {len(vector_search_queries)} queries.")
+
+    logger.info(f"Generating search vector from {len(vector_search_queries)} concepts...")
+    final_search_vector = await weaviate_conn.get_vector_for_concepts(vector_search_queries)
+
+    if not final_search_vector:
+        logger.error("Could not generate a search vector. Aborting query.")
+        return QueryResponse(llm_answer="Could not understand the query to perform a search.", subgraph_context=Subgraph(), source_chunks=[])
 
     # --- Stage 3: Main Retrieval ---
-    candidate_chunks_meta = []
+    logger.info(f"Performing main hybrid search with {len(vector_search_queries)} vector concepts and '{user_query}' as the keyword query.")
+
     if filter_filenames:
-        logger.info("Using per-document retrieval strategy.")
+        logger.info("Using per-document hybrid retrieval strategy.")
         candidate_chunks_meta = await weaviate_conn.search_chunks_per_document(
-            query_concepts=queries_for_main_search,
+            query=user_query,
+            alpha=hybrid_alpha,
             filenames=filter_filenames,
-            per_file_limit=pipeline_config.get('candidates_per_doc', 5)
+            per_file_limit=pipeline_config.get('candidates_per_doc', 5),
+            search_vector=final_search_vector
         )
     else:
-        logger.info("Using global retrieval strategy.")
+        logger.info("Using global hybrid retrieval strategy.")
         candidate_chunks_meta = await weaviate_conn.search_similar_chunks(
-            query_concepts=queries_for_main_search,
+            query=user_query,
+            alpha=hybrid_alpha,
             top_k=pipeline_config.get('main_search_top_k', 15),
-            filter_filenames=None
+            filter_filenames=None,
+            search_vector=final_search_vector
         )
 
     if not candidate_chunks_meta:
@@ -158,6 +178,7 @@ async def perform_raw_vector_search(search_request: VectorSearchRequest) -> List
     it will also perform a second-pass re-ranking on the initial results.
     """
     weaviate_conn = get_weaviate_connector()
+    alpha = search_request.alpha if search_request.alpha is not None else settings.RETRIEVAL_PIPELINE.get('hybrid_search_alpha', 0.5)
 
     # If reranking is enabled, we should fetch more initial candidates
     # to give the reranker a better pool of documents to work with.
@@ -169,7 +190,8 @@ async def perform_raw_vector_search(search_request: VectorSearchRequest) -> List
 
     # Step 1: Initial vector search
     search_results_meta = await weaviate_conn.search_similar_chunks(
-        query_concepts=[search_request.query],
+        query=search_request.query,
+        alpha=alpha,
         top_k=initial_top_k,
         filter_filenames=search_request.filter_filenames
     )
