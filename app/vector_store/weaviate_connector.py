@@ -1,7 +1,6 @@
 import weaviate
 import logging
 from typing import List, Optional, Dict, Any
-import numpy as np
 
 from app.core.config import settings
 
