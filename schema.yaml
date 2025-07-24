@@ -1,64 +1,64 @@
 entity_types:
-  # Core Product & Company
-  - PRODUCT_OR_SYSTEM    # Represents the main software system, e.g., "N2", "Nirvana".
-  - ORGANIZATION         # Represents a company, e.g., "SoluSoft", "Microsoft".
-
-  # System Architecture & Components
-  - COMPONENT            # Represents a distinct part of the system, e.g., "Universal Document Viewer", "Import Wizard", "N2 Server".
-  - TECHNOLOGY_OR_STANDARD # Represents a technology, platform, or standard, e.g., "Microsoft SQL Server", "LDAP", "XML", "ASP.NET", "C#".
-  - FILE_FORMAT          # Represents a specific file type, e.g., "PDF", "DOCX", "TIFF", "HTML".
-
-  # System Features & Concepts
-  - SYSTEM_FEATURE       # Represents a major capability of the system, e.g., "Version Control", "Workflow", "Full-text search", "Security".
-  - INDUSTRY_APPLICATION # Represents a business area or use case, e.g., "Accounts Payable", "Clinical Trial", "Human Resources".
-
-  # Data & Configuration Objects (things managed within N2)
-  - DATA_OBJECT          # A generic parent for objects within the system.
-  - TEMPLATE             # Represents a document or folder template.
-  - ATTRIBUTE            # Represents a metadata field used for indexing, e.g., "Claim Number", "Claim Date".
-  - FOLDER_OBJECT        # Represents a folder instance within the N2 repository.
-  - DOCUMENT_OBJECT      # Represents a document instance within the N2 repository.
-
-  # Security Concepts
-  - SECURITY_CONCEPT     # A specific security mechanism.
-  - ACL                  # Access Control List, a type of SECURITY_CONCEPT.
-  - ROLE                 # A user role, e.g., "Owner", "Administrator".
-  - AUTHENTICATION_METHOD # e.g., "Internal Authentication", "LDAP Authentication".
-  - PERMISSION           # A specific right, e.g., "Read", "Write", "Delete".
+#  # Core Product & Company
+#  - PRODUCT_OR_SYSTEM    # Represents the main software system, e.g., "N2", "Nirvana".
+#  - ORGANIZATION         # Represents a company, e.g., "SoluSoft", "Microsoft".
+#
+#  # System Architecture & Components
+#  - COMPONENT            # Represents a distinct part of the system, e.g., "Universal Document Viewer", "Import Wizard", "N2 Server".
+#  - TECHNOLOGY_OR_STANDARD # Represents a technology, platform, or standard, e.g., "Microsoft SQL Server", "LDAP", "XML", "ASP.NET", "C#".
+#  - FILE_FORMAT          # Represents a specific file type, e.g., "PDF", "DOCX", "TIFF", "HTML".
+#
+#  # System Features & Concepts
+#  - SYSTEM_FEATURE       # Represents a major capability of the system, e.g., "Version Control", "Workflow", "Full-text search", "Security".
+#  - INDUSTRY_APPLICATION # Represents a business area or use case, e.g., "Accounts Payable", "Clinical Trial", "Human Resources".
+#
+#  # Data & Configuration Objects (things managed within N2)
+#  - DATA_OBJECT          # A generic parent for objects within the system.
+#  - TEMPLATE             # Represents a document or folder template.
+#  - ATTRIBUTE            # Represents a metadata field used for indexing, e.g., "Claim Number", "Claim Date".
+#  - FOLDER_OBJECT        # Represents a folder instance within the N2 repository.
+#  - DOCUMENT_OBJECT      # Represents a document instance within the N2 repository.
+#
+#  # Security Concepts
+#  - SECURITY_CONCEPT     # A specific security mechanism.
+#  - ACL                  # Access Control List, a type of SECURITY_CONCEPT.
+#  - ROLE                 # A user role, e.g., "Owner", "Administrator".
+#  - AUTHENTICATION_METHOD # e.g., "Internal Authentication", "LDAP Authentication".
+#  - PERMISSION           # A specific right, e.g., "Read", "Write", "Delete".
 
 relationship_types:
-  # General & Company Relationships
-  - DEVELOPED_BY          # PRODUCT_OR_SYSTEM -> DEVELOPED_BY -> ORGANIZATION
-  - PARENT_COMPANY_OF     # ORGANIZATION -> PARENT_COMPANY_OF -> ORGANIZATION
-
-  # Product, Feature, and Component Relationships
-  - HAS_FEATURE           # PRODUCT_OR_SYSTEM -> HAS_FEATURE -> SYSTEM_FEATURE
-  - HAS_COMPONENT         # PRODUCT_OR_SYSTEM -> HAS_COMPONENT -> COMPONENT
-  - PART_OF               # COMPONENT -> PART_OF -> PRODUCT_OR_SYSTEM
-  - USED_FOR              # COMPONENT -> USED_FOR -> SYSTEM_FEATURE (e.g., Import Wizard USED_FOR Document Capture)
-
-  # Technology & Integration Relationships
-  - INTEGRATES_WITH       # PRODUCT_OR_SYSTEM -> INTEGRATES_WITH -> TECHNOLOGY_OR_STANDARD
-  - BUILT_WITH            # PRODUCT_OR_SYSTEM -> BUILT_WITH -> TECHNOLOGY_OR_STANDARD (e.g., N2 BUILT_WITH C#)
-  - RUNS_ON               # PRODUCT_OR_SYSTEM -> RUNS_ON -> TECHNOLOGY_OR_STANDARD (e.g., N2 Server RUNS_ON Windows Server 2003)
-  - SUPPORTS              # COMPONENT -> SUPPORTS -> FILE_FORMAT (e.g., Universal Viewer SUPPORTS PDF)
-
-  # Data Object & Configuration Relationships
-  - MANAGES               # PRODUCT_OR_SYSTEM -> MANAGES -> DOCUMENT_OBJECT
-  - USES_TEMPLATE         # DOCUMENT_OBJECT -> USES_TEMPLATE -> TEMPLATE
-  - CONTAINS              # FOLDER_OBJECT -> CONTAINS -> DOCUMENT_OBJECT
-  - HAS_ATTRIBUTE         # TEMPLATE -> HAS_ATTRIBUTE -> ATTRIBUTE
-
-  # Security Relationships
-  - USES_SECURITY_MODEL   # PRODUCT_OR_SYSTEM -> USES_SECURITY_MODEL -> SECURITY_CONCEPT
-  - ASSIGNED_TO           # PERMISSION -> ASSIGNED_TO -> ACL | ACL -> ASSIGNED_TO -> ROLE
-  - GRANTS_PERMISSION     # ROLE -> GRANTS_PERMISSION -> PERMISSION
-  - CONTROLS_ACCESS_TO    # ACL -> CONTROLS_ACCESS_TO -> TEMPLATE
-  - AUTHENTICATES_VIA     # PRODUCT_OR_SYSTEM -> AUTHENTICATES_VIA -> AUTHENTICATION_METHOD
-
-  # Use Case & Application Relationships
-  - APPLICABLE_IN         # PRODUCT_OR_SYSTEM -> APPLICABLE_IN -> INDUSTRY_APPLICATION
-  - HAS_VERSION_CONTROL   # DOCUMENT_OBJECT -> HAS_VERSION_CONTROL
+#  # General & Company Relationships
+#  - DEVELOPED_BY          # PRODUCT_OR_SYSTEM -> DEVELOPED_BY -> ORGANIZATION
+#  - PARENT_COMPANY_OF     # ORGANIZATION -> PARENT_COMPANY_OF -> ORGANIZATION
+#
+#  # Product, Feature, and Component Relationships
+#  - HAS_FEATURE           # PRODUCT_OR_SYSTEM -> HAS_FEATURE -> SYSTEM_FEATURE
+#  - HAS_COMPONENT         # PRODUCT_OR_SYSTEM -> HAS_COMPONENT -> COMPONENT
+#  - PART_OF               # COMPONENT -> PART_OF -> PRODUCT_OR_SYSTEM
+#  - USED_FOR              # COMPONENT -> USED_FOR -> SYSTEM_FEATURE (e.g., Import Wizard USED_FOR Document Capture)
+#
+#  # Technology & Integration Relationships
+#  - INTEGRATES_WITH       # PRODUCT_OR_SYSTEM -> INTEGRATES_WITH -> TECHNOLOGY_OR_STANDARD
+#  - BUILT_WITH            # PRODUCT_OR_SYSTEM -> BUILT_WITH -> TECHNOLOGY_OR_STANDARD (e.g., N2 BUILT_WITH C#)
+#  - RUNS_ON               # PRODUCT_OR_SYSTEM -> RUNS_ON -> TECHNOLOGY_OR_STANDARD (e.g., N2 Server RUNS_ON Windows Server 2003)
+#  - SUPPORTS              # COMPONENT -> SUPPORTS -> FILE_FORMAT (e.g., Universal Viewer SUPPORTS PDF)
+#
+#  # Data Object & Configuration Relationships
+#  - MANAGES               # PRODUCT_OR_SYSTEM -> MANAGES -> DOCUMENT_OBJECT
+#  - USES_TEMPLATE         # DOCUMENT_OBJECT -> USES_TEMPLATE -> TEMPLATE
+#  - CONTAINS              # FOLDER_OBJECT -> CONTAINS -> DOCUMENT_OBJECT
+#  - HAS_ATTRIBUTE         # TEMPLATE -> HAS_ATTRIBUTE -> ATTRIBUTE
+#
+#  # Security Relationships
+#  - USES_SECURITY_MODEL   # PRODUCT_OR_SYSTEM -> USES_SECURITY_MODEL -> SECURITY_CONCEPT
+#  - ASSIGNED_TO           # PERMISSION -> ASSIGNED_TO -> ACL | ACL -> ASSIGNED_TO -> ROLE
+#  - GRANTS_PERMISSION     # ROLE -> GRANTS_PERMISSION -> PERMISSION
+#  - CONTROLS_ACCESS_TO    # ACL -> CONTROLS_ACCESS_TO -> TEMPLATE
+#  - AUTHENTICATES_VIA     # PRODUCT_OR_SYSTEM -> AUTHENTICATES_VIA -> AUTHENTICATION_METHOD
+#
+#  # Use Case & Application Relationships
+#  - APPLICABLE_IN         # PRODUCT_OR_SYSTEM -> APPLICABLE_IN -> INDUSTRY_APPLICATION
+#  - HAS_VERSION_CONTROL   # DOCUMENT_OBJECT -> HAS_VERSION_CONTROL
 
 # Allow the LLM to create new entity and relationship types if it discovers
 # concepts not explicitly defined above, making the graph richer.
