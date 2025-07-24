@@ -92,7 +92,11 @@ def display_pyvis_graph(graph_data: dict, graph_id: str) -> None:
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".html", prefix=f"{graph_id}_") as tmp:
             net.save_graph(tmp.name)
-            st.components.v1.html(tmp.read(), height=750, scrolling=True)
+            # Read the generated file as bytes
+            html_bytes = tmp.read()
+            # Decode the bytes into a string, replacing any invalid characters
+            html_string = html_bytes.decode('utf-8', 'replace')
+            st.components.v1.html(html_string, height=750, scrolling=True)
         os.unlink(tmp.name)
     except Exception as e:
         st.error(f"Error rendering Pyvis graph: {e}")
